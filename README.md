@@ -1,5 +1,7 @@
 # Reflection, Rewinding, and Coin-Toss in EasyCrypt
 
+This repository (under the tag cpp2022) contains the snapshot of EasyCrypt code associated with the paper 
+"D. Firsov, D. Unruh. Reflection, Rewinding, and Coin-Toss in EasyCrypt." published on CPP2022.
 
 Setup
 -----
