@@ -66,18 +66,18 @@ module type RewindableSumBinder = {
   proc commit(param: value) : commitment
   proc open(m: message) : openingkey
   proc getState()          : sbits
-  proc * setState(b : sbits) : unit
+  proc setState(b : sbits) : unit
 }.
 
 module R(A : RewindableSumBinder) : Binder = {
   proc bind(x: value) : commitment * message * openingkey * message * openingkey = {
   var c, d1, d2, s;
-  c <- A.commit(x);
+  c <@ A.commit(x);
 
-  s <- A.getState();
-  d1 <- A.open(m1);
+  s <@ A.getState();
+  d1 <@ A.open(m1);
   A.setState(s);
-  d2 <- A.open(m2);
+  d2 <@ A.open(m2);
 
   return (c, m1, d1, m2, d2);
   }
@@ -88,10 +88,10 @@ module R(A : RewindableSumBinder) : Binder = {
 
 section.
 
-declare module S : CommitmentScheme.
-declare module A : RewindableSumBinder {S}.
+declare module S <: CommitmentScheme.
+declare module A <: RewindableSumBinder {-S}.
 
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -103,18 +103,18 @@ axiom RewProp :
   
 
 op Ver (x : value * message * commitment * openingkey) :  bool.
-axiom verify_det : forall a,
+declare axiom verify_det : forall a,
   phoare [ S.verify : arg = a ==> res = Ver a ] = 1%r.
 
-axiom Aoll : islossless A.open.
-axiom Acl : islossless A.commit.
-axiom Sgl : islossless S.gen.
+declare axiom Aoll : islossless A.open.
+declare axiom Acl : islossless A.commit.
+declare axiom Sgl : islossless S.gen.
 
 local module WInit = {
   proc init() : value * commitment = {
      var x, c;
-     x <- S.gen();
-     c <- A.commit(x);
+     x <@ S.gen();
+     c <@ A.commit(x);
      return (x, c);
   }
 }.
@@ -123,18 +123,18 @@ local module WInit = {
 local module WA = {
   proc ex1(vc : value * commitment) : value * message * commitment * openingkey  = {
     var d;
-    d <- A.open(m1);    
+    d <@ A.open(m1);    
     return (vc.`1, m1, vc.`2, d);
   }
   proc ex2(vc : value * commitment) : value * message * commitment * openingkey = {
     var d;
-    d <- A.open(m2);    
+    d <@ A.open(m2);    
     return (vc.`1, m2, vc.`2, d);
   }
 
   proc getState() = {
     var r;
-    r <- A.getState();
+    r <@ A.getState();
     return r;
   }
 
@@ -213,10 +213,10 @@ lemma commitment_sum_binding &m:
 proof.  rewrite f_case t_case b_case.
 apply (sum_binding_generic WA WInit).
 proc. call Aoll. skip. auto. proc. call Aoll. skip. auto. proc. call Acl. call Sgl. skip. auto.
-proc. call(_:true). call(_:true). skip. smt.
-proc. call(_:true). call(_:true). skip. smt.
-proc. call(_:true). call(_:true). skip. smt.
-proc. call(_:true). call(_:true). skip. smt.
+proc. call(_:true). call(_:true). skip. smt().
+proc. call(_:true). call(_:true). skip. smt().
+proc. call(_:true). call(_:true). skip. smt().
+proc. call(_:true). call(_:true). skip. smt().
 elim (RewProp).
 progress.
 exists f.
@@ -290,14 +290,14 @@ clone import SumBinding  with
 
 
 section.
-declare module A : RewindableSumBinder.
+declare module A <: RewindableSumBinder.
 
 
-axiom All : islossless A.open.
-axiom Acl : islossless A.commit.
+declare axiom All : islossless A.open.
+declare axiom Acl : islossless A.commit.
 
 
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -320,16 +320,16 @@ apply All.
 apply Acl.
 proc.
 wp. rnd.  skip. smt.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
-apply ips. apply unpair_pair.
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. *)
 qed.
 
 

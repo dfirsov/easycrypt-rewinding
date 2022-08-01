@@ -34,7 +34,7 @@ clone import RewBasics as RW with type sbits <- sbits,
 
 module type RewRun = {
   proc getState()          : sbits
-  proc * setState(b : sbits) : unit
+  proc setState(b : sbits) : unit (* EasyCrypt removed support for "proc *" *)
   proc ex1(a:at1) : rt1
   proc ex2(a:at2) : rt2
 }.
@@ -44,33 +44,33 @@ module type RewRun = {
 module CommNoInit(A : RewRun) = {
   proc ex1ex2(a1 : at1, a2 : at2) = {
      var r1, r2, s;
-     s <- A.getState();
-     r1 <- A.ex1(a1);
+     s <@ A.getState();
+     r1 <@ A.ex1(a1);
      A.setState(s);
-     r2 <- A.ex2(a2);
+     r2 <@ A.ex2(a2);
      return (r1,r2);
   }
 
   proc ex2ex1(a1 : at1, a2 : at2) = {
      var r1, r2, s;
-     s <- A.getState();
-     r2 <- A.ex2(a2);
+     s <@ A.getState();
+     r2 <@ A.ex2(a2);
      A.setState(s);
-     r1 <- A.ex1(a1);
+     r1 <@ A.ex1(a1);
      return (r1,r2);
   }
 }.
 
 
 section.
-declare module A : RewRun. 
+declare module A <: RewRun. 
 
 
 local module BestModule(A : RewRun) = {
   proc main(a : at1) : rt1 = {
     var s, r;
-    s <- A.getState();
-    r <- A.ex1(a);
+    s <@ A.getState();
+    r <@ A.ex1(a);
     A.setState(s);
     return r;
   }
@@ -83,37 +83,37 @@ local module BestModule(A : RewRun) = {
 
   proc comm1(a1,a2) = {
      var r1, r2, s;
-     r1 <- main(a1);
-     s <- A.getState();
-     r2 <- A.ex2(a2);
+     r1 <@ main(a1);
+     s <@ A.getState();
+     r2 <@ A.ex2(a2);
      A.setState(s);
      return (r1,r2);
   }
 
   proc comm2(a1,a2, d : at1 -> rt1 distr) = {
      var r1, r2, s;
-     r1 <- main'(a1,d);
-     s <- A.getState();
-     r2 <- A.ex2(a2);
+     r1 <@ main'(a1,d);
+     s <@ A.getState();
+     r2 <@ A.ex2(a2);
      A.setState(s);
      return (r1,r2);
   }
 
   proc comm3(a1,a2, d : at1 -> rt1 distr) = {
      var r1, r2,s;
-     s <- A.getState();
-     r2 <- A.ex2(a2);
+     s <@ A.getState();
+     r2 <@ A.ex2(a2);
      A.setState(s);
-     r1 <- main'(a1,d);
+     r1 <@ main'(a1,d);
      return (r1,r2);
   }
 
   proc comm4(a1,a2) = {
      var r1, r2, s;
-     s <- A.getState();
-     r2 <- A.ex2(a2);
+     s <@ A.getState();
+     r2 <@ A.ex2(a2);
      A.setState(s);
-     r1 <- main(a1);
+     r1 <@ main(a1);
      return (r1,r2);
   }
 
@@ -125,7 +125,7 @@ clone import Reflection.Refl with type at <- at1,
 
                                   
 (* getState lossless follows from rewindable_A, but setState lossless does not, so we ask it *)
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -138,7 +138,7 @@ axiom RewProp :
 local module WA = {
   proc main(a:at1) : rt1 = {
    var r;
-   r <- A.ex1(a);
+   r <@ A.ex1(a);
    return r;
   }
 }.
@@ -162,9 +162,9 @@ hoare.
 elim (rewindable_A_plus A RewProp).
 progress. proc.
 call (H7 ga). call(_:true).
-call (H4 ga). skip. progress. smt. auto.  smt. auto.  
+call (H4 ga). skip. progress. smt(). auto.  smt(). auto.  
 rewrite jk. clear jk.
-byphoare (_: (glob A) <> x.`2 ==> _) . hoare. proc. rnd.  skip. smt. smt. auto.
+byphoare (_: (glob A) <> x.`2 ==> _) . hoare. proc. rnd.  skip. smt(). smt(). auto.
 simplify.
 move => pcc.
 have jkk : Pr[BestModule(A).main(a{1}) @ &1 : (res, (glob A)) = x] = Pr[BestModule(A).main(a{1}) @ &1 : res = x.`1]. 
@@ -177,16 +177,16 @@ call {1} (H6 ga).
 call {2} (H6 ga). 
 call(_:true).
 call {1} (H3 ga). 
-call {2} (H3 ga).  skip. progress. smt. smt. smt. smt.
+call {2} (H3 ga).  skip. progress. smt(). smt(). smt(). smt().
 rewrite jkk.
 have  kkj : Pr[BestModule(A).main'(a{2}, d{2}) @ &2 : (res, (glob A)) = x] =  Pr[BestModule(A).main'(a{2}, d{2}) @ &2 : res = x.`1].
 byequiv(_: ={glob A, arg} /\ x.`2 = (glob A){1}  ==> _).
-proc. rnd. skip. progress. smt. smt. smt. smt.
+proc. rnd. skip. progress. smt(). smt(). smt(). smt().
 rewrite kkj. clear jkk. clear kkj.
 have kkj : Pr[BestModule(A).main'(a{2}, d{2}) @ &2 : res = x.`1]
    =   mu1 (D (glob A){2} a{2}) x.`1.
 byphoare (_: arg = (a{2} , d{2})  ==> _). 
-proc. rnd.  skip. progress. smt. auto. auto.
+proc. rnd.  skip. progress. smt(). auto. auto.
 rewrite kkj.
 rewrite Dprop.
 byequiv (_: exists ga, ga = (glob A){1} /\  ={arg, glob A} ==> _).
@@ -194,7 +194,7 @@ proc*. inline*. sp. wp.
 elim*. move => ga.
 elim (rewindable_A_plus A RewProp).
 progress. call {1} (H6 ga). call(_:true). call {1} (H3 ga). skip. progress.
-smt. smt.
+smt(). smt().
 qed.
 
 
@@ -208,7 +208,7 @@ split. move => M a1 a2.
 byequiv.
 proc.  
 call (_:true). call (_:true). call (_:true).
-call Dprop. skip. progress. smt. smt. 
+call Dprop. skip. progress. smt(). smt(). 
 split. move => M a1 a2 d. 
 byequiv (_: exists ga, ga = (glob A){1} /\ (={glob A, arg}) ==> _).
 elim (rewindable_A_plus A RewProp). progress. 
@@ -219,16 +219,16 @@ wp.
 swap {1} [1..2] 3.
 wp.  rnd.  wp.
 call (_:true). call (_:true). call (_:true).
-skip. progress.   smt. auto.
+skip. progress. smt(). auto.
 move => M a1 a2.
 byequiv (_: exists ga, ga = (glob A){1} /\ ={a1,a2, glob A} /\ arg.`3{1} = D (glob A){1}  ==> _). proc. 
 elim*. move => ga.
 seq 3 3 : (={r2, a1, glob A} /\ ga = (glob A){2} /\ d{1} = D (glob A){1}).
 elim (rewindable_A_plus A RewProp). progress. 
 call {1} (H3 ga). call {2} (H3 ga). call (_:true).
-call {1} (H0 ga). call {2} (H0 ga). skip. smt.
+call {1} (H0 ga). call {2} (H0 ga). skip. smt().
 symmetry. call Dprop.
-skip. progress.  smt. smt. 
+skip. progress.  smt(). smt(). 
 qed.
 
 
@@ -248,7 +248,7 @@ call {2} (H3 ga).
 call (_:true).
 call {2} (H0 ga).
 call {1} (H0 ga). wp. skip.  
-progress.  smt. 
+progress. smt(). 
 auto. 
 qed.
 
@@ -270,7 +270,7 @@ call (_:true).
 call {1} (H0 ga). 
 call {2} (H0 ga). 
 skip.  
-progress.  smt.  auto.
+progress. smt().  auto.
 qed.
 
 

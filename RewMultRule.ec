@@ -6,7 +6,7 @@ type ex1at, ex2at, ex1rt, ex2rt.
 
 module type RewEx1Ex2 = {
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit 
   proc ex1(x1 : ex1at) : ex1rt
   proc ex2(x2 : ex2at) : ex2rt
 }.
@@ -15,8 +15,8 @@ module type RewEx1Ex2 = {
 module GetExec1Set(A : RewEx1Ex2) = {
   proc main(x1 : ex1at) = {
     var s , r;
-    s <- A.getState();
-    r <- A.ex1(x1);
+    s <@ A.getState();
+    r <@ A.ex1(x1);
     A.setState(s);
     return r;
   }
@@ -29,8 +29,8 @@ module GetExec1SetExec2Conj(A : RewEx1Ex2) = {
     var  r1, r2, x11, x22;
     x11 <- x1; (* PAPER: cannot prove x{hr} = x{hr} *)
     x22 <- x2;
-    r1 <- GRS.main(x11);
-    r2 <- A.ex2(x22);
+    r1 <@ GRS.main(x11);
+    r2 <@ A.ex2(x22);
     return (r1, r2); 
   }
 }.
@@ -39,14 +39,14 @@ module GetExec1SetExec2Conj(A : RewEx1Ex2) = {
 module MultTriv(A : RewRun, B : RewRun) = {
   proc main(x : iat2, y : iat2) = {
      var r1, r2;
-     r1 <- A.run(x);
-     r2 <- B.run(y);
+     r1 <@ A.run(x);
+     r2 <@ B.run(y);
      return (r1, r2);
   }
 }.
 
 
-lemma rew_mult_simple : forall (P <: RewRun) (Q <: RewRun{P}) &m M1 M2  i1 i2,
+lemma rew_mult_simple : forall (P <: RewRun) (Q <: RewRun{-P}) &m M1 M2  i1 i2,
     islossless P.run => islossless Q.run =>
     Pr[ MultTriv(P,Q).main(i1,i2) @ &m : M1 res.`1 /\ M2 res.`2 ]
     = Pr[ P.run(i1) @ &m : M1 res ] * Pr[ Q.run(i2) @ &m : M2 res ].
@@ -59,25 +59,25 @@ call (_:true). skip. auto.
    have ph1 : forall &n x, phoare[ P.run : z = x /\ (glob P) = (glob P){n} ==> M1 res ] = (Pr[ P.run(x) @ &n : M1 res ]).
    progress. bypr. progress. byequiv. proc*. call (_:true). skip. auto. auto. auto.
    call (ph1 &m  i1). skip.  progress.
-conseq (_: ((glob Q) = (glob Q){m} /\ x = i1 /\ y = i2) ==> M2 r2). smt. smt.
+conseq (_: ((glob Q) = (glob Q){m} /\ x = i1 /\ y = i2) ==> M2 r2). smt(). smt().
    have ph2 : forall &n x, phoare[ Q.run : z = x /\ (glob Q) = (glob Q){n} ==> M2 res ] = (Pr[ Q.run(x) @ &n : M2 res ]).
    progress. bypr. progress. byequiv. proc*. call (_:true). skip.  progress. auto. auto.
    rewrite /q. call (ph2 &m i2). skip.  progress.
-hoare. call (_:true). skip. smt.
-smt.
-smt.
+hoare. call (_:true). skip. smt().
+smt().
+smt().
 auto.
 qed.
 
 
 section.
-declare module A : RewEx1Ex2.
+declare module A <: RewEx1Ex2.
 
 
 (* getState lossless follows from rewindable_A, 
   but setState lossless does not, so we ask it *)
 (* PAPER: we cannot put these things globally into the section because "op f : glob A -> sbits" is not allowed *)
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -109,7 +109,7 @@ call ph.
 call (s2 ga). skip. auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress. smt.
+call (_:true). skip. progress. smt().
 auto. 
 qed.
 
@@ -128,7 +128,7 @@ call ph.
 call (s2 ga). skip. auto.
 call (s3 ga). skip. auto.
 hoare.
-call (_:true). skip. progress.  smt.
+call (_:true). skip. progress.  smt().
 qed.
 
 
@@ -170,7 +170,7 @@ call hp.
 skip. progress.   auto. 
 hoare.
 call (_:true).
-auto. smt.
+auto. smt().
 auto.
 auto.
 auto.

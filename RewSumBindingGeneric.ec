@@ -59,22 +59,22 @@ clone import RewSumBindingAux.RSBH as RSBH with type sbits <- sbits,
 
 
 section.
-declare module A : RewRunExec1Exec2.
-declare module B : Initializer.
+declare module A <: RewRunExec1Exec2.
+declare module B <: Initializer.
 
 
-axiom Afl : islossless A.ex1.
-axiom Agl : islossless A.ex2.
-axiom Bin : islossless B.init.
+declare axiom Afl : islossless A.ex1.
+declare axiom Agl : islossless A.ex2.
+declare axiom Bin : islossless B.init.
 
 (* due to EC restrictions (bug) these are not provable and not reduciable to one another  *)
-axiom Bsens    : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, res} ].
-axiom Bsens'   : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, glob B, res} ].
-axiom Bsens''  : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ]. 
-axiom Bsens''' : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ]. 
+declare axiom Bsens    : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, res} ].
+declare axiom Bsens'   : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A, glob B, res} ].
+declare axiom Bsens''  : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ]. 
+declare axiom Bsens''' : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ]. 
 
 
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -104,7 +104,7 @@ rewrite - (H0 &m1). byequiv. proc*.  inline*. wp. call (_:true).
 rewrite -  (H1 &m1 (f x) x). auto.
 byequiv. proc*. inline*. sp.   call(_:true). skip. progress. auto. auto.
 proc. call H2. skip. auto.
-proc. seq 1 : (true). rnd. auto. rnd.  skip. auto. smt.
+proc. seq 1 : (true). rnd. auto. rnd.  skip. auto. smt(@DBool).
 if. call Afl. skip. auto. call Agl. skip. auto.  hoare.  simplify. rnd. skip. auto.  auto.
 apply Bin.      
 simplify.
@@ -112,13 +112,13 @@ have q : Pr[QQ(SBB(A), B).main_run(i) @ &m : P res.`2] = Pr[SB(A, B).main_run(i)
         byequiv (_: (={i, glob A, glob B}) ==> _). proc.      
 seq 1 1 : (={glob A} /\ r0{1} = ix{2}). call Bsens. skip. auto. 
 inline*. wp.
-conseq (_: exists ga, ga = (glob A){1} /\ ={glob A} /\ r0{1} = ix{2} ==> _). smt. sp. 
+conseq (_: exists ga, ga = (glob A){1} /\ ={glob A} /\ r0{1} = ix{2} ==> _). smt(). sp. 
 simplify. 
 seq 1 1 : (i0{2} = ix{2} /\
   i0{1} = r0{1} /\
   exists (ga : (glob A)), ga = (glob A){1} /\ ={glob A} /\ r0{1} = ix{2} /\ ={x}).
-rnd. skip. progress. smt.
-if.  smt. call (_:true). skip. progress. call(_:true). skip. progress. auto. 
+rnd. skip. progress. smt().
+if.  smt(). call (_:true). skip. progress. call(_:true). skip. progress. auto. 
 auto.  
 rewrite - q. clear q.
 have q : Pr[QQ(SBB(A), B).main(i) @ &m : P res.`1.`2 /\ P res.`2.`2] = Pr[SB(A, B).main(i) @ &m : P res.`1 /\ P res.`2].
@@ -153,9 +153,9 @@ byequiv (_: (={i, glob A, glob B}) ==> _). proc.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 2 1 : (r1{1} = r{2}). 
 elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4.
-call (_:true). conseq (_: exists ga, ga = (glob A){1} /\ ={glob A, ix} ==> _). smt.
+call (_:true). conseq (_: exists ga, ga = (glob A){1} /\ ={glob A, ix} ==> _). smt().
 elim*. move => ga.
-call {1} (s2 ga). skip. smt.
+call {1} (s2 ga). skip. smt().
 call {1} (_:true ==> true). apply Afl.
 call {1} (_:true ==> true). apply Ass.
 skip. auto. auto. auto.
@@ -167,9 +167,9 @@ byequiv (_: (={i,glob A, glob B}) ==> _). proc.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 2 1 : (r1{1} = r{2}). 
 elim (rewindable_A A RewProp). move => fA [s1 [s2 [s3]]] s4.
-call (_:true). conseq (_: exists ga, ga = (glob A){1} /\ ={glob A, ix} ==> _). smt.
+call (_:true). conseq (_: exists ga, ga = (glob A){1} /\ ={glob A, ix} ==> _). smt().
 elim*. move => ga.
-call {1} (s2 ga). skip. smt.
+call {1} (s2 ga). skip. smt().
 call {1} (_:true ==> true). apply Agl.
 call {1} (_:true ==> true). apply Ass.
 skip. auto. auto. auto.
@@ -194,7 +194,7 @@ have tr1 :
  + 1%r/2%r * V_21
  = 2%r * (1%r/4%r * V_12 + 1%r/4%r * V_21 + 1%r/4%r * V_11 + 1%r/4%r * V_22
    - (1%r/4%r * V_11 + 1%r/4%r * V_22)).
-smt.
+smt().
 rewrite tr1. clear tr1.
 rewrite - (fact2  A B). apply Afl.  apply Agl. apply Ass. apply Bsens.
 have se : Pr[SB(A,B).main(i) @ &m : P res.`1 /\ P res.`2 ] = V_rnd_rnd. reflexivity.
@@ -204,13 +204,13 @@ have v_2_22 : V_22 <= V_2. apply fact5.
 have ntg :
   2%r * (V_rnd ^ 2 - 1%r / 2%r * V_rnd) <= 2%r * (V_rnd_rnd - (1%r / 4%r * V_1 + 1%r / 4%r * V_2)).
 have tr3 : (1%r / 4%r * V_1 + 1%r / 4%r * V_2) = (1%r/2%r * ((1%r / 2%r * V_1 + 1%r / 2%r * V_2))).
-smt. rewrite tr3.
+smt(). rewrite tr3.
 have tr4 : V_rnd = (1%r / 2%r * V_1 + 1%r / 2%r * V_2). 
 apply fact3'.
 rewrite - tr4.
 have lk : V_rnd ^ 2 <= V_rnd_rnd . apply fact1.
-smt. 
-smt.
+smt(). 
+smt(@Real).
 qed.
 
 
@@ -222,23 +222,23 @@ move => ass1.
 have s1 : 1%r/2%r * Pr[ SB(A,B).main_1(i) @ &m :  P res ] 
          + 1%r/2%r * Pr[ SB(A,B).main_2(i) @ &m :  P res ] <= 1%r/2%r.
 rewrite - fact3'. apply ass1.
-smt.
+smt(@Distr).
 move => pr_reln.
-have pr_rel : Pr[SB(A,B).main_run(i) @ &m : P res] > 1%r/2%r. smt. clear pr_reln.
+have pr_rel : Pr[SB(A,B).main_run(i) @ &m : P res] > 1%r/2%r. smt(). clear pr_reln.
 have fr_ab : 1%r/2%r * Pr[ SB(A,B).main_12(i) @ &m : P res.`1 /\ P res.`2 ] 
            + 1%r/2%r * Pr[ SB(A,B).main_21(i) @ &m : P res.`1 /\ P res.`2 ]
    >= 2%r * Pr[ SB(A,B).main_run(i) @ &m :  P res ] *  (Pr[ SB(A,B).main_run(i) @ &m :  P res ] - (1%r/2%r)). apply deriv.
 have : 1%r/2%r * Pr[ SB(A,B).main_12(i) @ &m : P res.`1 /\ P res.`2 ] + 1%r/2%r * Pr[ SB(A,B).main_21(i) @ &m : P res.`1 /\ P res.`2 ]
    >= (Pr[ SB(A,B).main_run(i) @ &m :  P res ] - (1%r/2%r)).  
-smt.
+smt().
 rewrite (fact3').
 move => strfr_ab.
 have qqq : Pr[SB(A,B).main_1(i) @ &m : P res] +
            Pr[SB(A,B).main_2(i) @ &m : P res] - 1%r <=
            Pr[SB(A,B).main_12(i) @ &m : P res.`1 /\ P res.`2] +
            Pr[SB(A,B).main_21(i) @ &m : P res.`1 /\ P res.`2].
-smt.
-smt.
+smt().
+smt().
 qed.
 
 
@@ -254,17 +254,17 @@ have d : 1%r + 2%r * Pr[SB(A, B).main_12(i) @ &m : P res.`1 /\ P res.`2]
     have q1 : Pr[ SpecRewComm(A,B).iex1ex2(i) @ &m : M res.`2 ] = Pr[SB(A, B).main_12(i) @ &m : P res.`1 /\ P res.`2 ].
     byequiv (_: (={arg, glob A, glob B}) ==> _ ). proc.  
     seq 1 1 : (={glob A} /\ r0{1} = ix{2}). call Bsens. skip. auto.
-    call(_:true). call (_:true). call(_:true). call(_:true). skip. progress. smt. smt.  smt. smt. auto. 
+    call(_:true). call (_:true). call(_:true). call(_:true). skip. progress. smt(). smt().  smt(). smt(). auto. 
     auto.
     rewrite - q1. clear q1.
     have q2 : Pr[ SpecRewComm(A,B).iex2ex1(i) @ &m : M res.`2 ] = Pr[SB(A, B).main_21(i) @ &m : P res.`1 /\ P res.`2 ].
     byequiv (_: (={arg,glob A, glob B}) ==> _ ). proc.  
     seq 1 1 : (={glob A} /\ r0{1} = ix{2}). call Bsens. skip. auto.
-    call(_:true). call (_:true). call(_:true). call(_:true). skip. progress. smt. smt.  smt. smt. auto. 
+    call(_:true). call (_:true). call(_:true). call(_:true). skip. progress. smt(). smt().  smt(). smt(). auto. 
     auto.
     rewrite - q2. clear q2.
     rewrite  (rew_comm_law A B Bsens' RewProp &m (fun (x : irt * (rrt * rrt)) => M x.`2)).  auto.
-  rewrite q. smt.
+  rewrite q. smt().
 rewrite d.
  apply (fin_deriv' &m P).
 qed.

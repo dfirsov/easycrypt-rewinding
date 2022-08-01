@@ -29,7 +29,7 @@ module type Initializer = {
 
 module type RewRunExec1Exec2 = {
   proc getState() : sbits
-  proc * setState(b : sbits) : unit 
+  proc setState(b : sbits) : unit (* EasyCrypt removed support for "proc *" *)
   proc run(i : irt) : rrt
   proc ex1(i : irt) : rrt
   proc ex2(i : irt) : rrt
@@ -41,16 +41,16 @@ module SBB (A : RewRunExec1Exec2) = {
     var r, x;
     x <$ {0,1};    
     if (x) {
-      r <- A.ex1(i);
+      r <@ A.ex1(i);
     }else{
-      r <- A.ex2(i);
+      r <@ A.ex2(i);
     }
      return r;
   }    
 
   proc getState() : sbits = {
     var s;
-    s <- A.getState();
+    s <@ A.getState();
     return s;
   }
   proc setState(b : sbits) : unit  = {
@@ -63,85 +63,85 @@ module SB (A : RewRunExec1Exec2, B : Initializer) = {
 
   proc main(i:iat) = {
     var s,ix,r1,r2;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- SBB.run(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@  SBB.run(ix);
     A.setState(s);
-    r2 <- SBB.run(ix);
+    r2 <@ SBB.run(ix);
     return (r1 , r2);
   }
 
   proc main_run(i:iat) = {
     var ix,r;
-    ix <- B.init(i);
-    r <- SBB.run(ix);
+    ix <@ B.init(i);
+    r <@ SBB.run(ix);
     return r;
   }
   
   proc main_12(i:iat) = {
     var s,ix,r1,r2;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex1(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex1(ix);
     A.setState(s);
-    r2 <- A.ex2(ix);
+    r2 <@ A.ex2(ix);
     return (r1, r2);
   }
   
   proc main_21(i:iat) = {
     var s,ix,r1,r2;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex2(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex2(ix);
     A.setState(s);
-    r2 <- A.ex1(ix);
+    r2 <@ A.ex1(ix);
     return (r1, r2);
   }
 
   proc main_11(i:iat) = {
     var s,ix,r1,r2;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex1(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex1(ix);
     A.setState(s);
-    r2 <- A.ex1(ix);
+    r2 <@ A.ex1(ix);
     return (r1, r2);
   }
 
   proc main_22(i:iat) = {
     var s,ix,r1,r2;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex2(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex2(ix);
     A.setState(s);
-    r2 <- A.ex2(ix);
+    r2 <@ A.ex2(ix);
     return (r1, r2);
   }
 
   proc main_1(i:iat) = {
     var r,ix;
-    ix <- B.init(i);
-    r <- A.ex1(ix);
+    ix <@ B.init(i);
+    r <@ A.ex1(ix);
     return r;
   }
 
   proc main_2(i:iat) = {
     var r, ix;
-    ix <- B.init(i);
-    r <- A.ex2(ix);
+    ix <@ B.init(i);
+    r <@ A.ex2(ix);
     return r;
   }
 }.
 
 
 section.
-declare module A : RewRunExec1Exec2.
-declare module B : Initializer.
+declare module A <: RewRunExec1Exec2.
+declare module B <: Initializer.
 
-axiom Afl : islossless A.ex1.
-axiom Agl : islossless A.ex2.
-axiom Ass : islossless A.setState.
-axiom Bsens : equiv[ B.init ~ B.init : ={i, glob A, glob B} ==> ={glob A, res} ].
+declare axiom Afl : islossless A.ex1.
+declare axiom Agl : islossless A.ex2.
+declare axiom Ass : islossless A.setState.
+declare axiom Bsens : equiv[ B.init ~ B.init : ={i, glob A, glob B} ==> ={glob A, res} ].
 
 
 local module M = {
@@ -150,30 +150,30 @@ local module M = {
     var r, x;
     x <$ {0,1};    
     if (x) {
-      r <- A.ex1(i);
+      r <@ A.ex1(i);
     }else{
-      r <- A.ex2(i);
+      r <@ A.ex2(i);
     }
    return (r,x);
   }  
 
   proc main(i:iat) = {
     var ix, r1, r2, s;
-    ix <- B.init(i);
-    s <- A.getState();
-    (r1, x1) <- run(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    (r1, x1) <@ run(ix);
     A.setState(s);
-    (r2, x2) <- run(ix);
+    (r2, x2) <@ run(ix);
     return (r1,r2);
   } 
 
   proc main_12(i:iat) = {
     var ix,r1, r2, s;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex1(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex1(ix);
     A.setState(s);
-    r2 <- A.ex2(ix);
+    r2 <@ A.ex2(ix);
     return (r1, r2);
   }
 
@@ -181,17 +181,17 @@ local module M = {
     var r;
     x1 <$ {0,1};
     x2 <$ {0,1};
-    r <- main_12(i);
+    r <@ main_12(i);
     return (r , x1 /\ !x2);
   }  
 
   proc main_11(i:iat) = {
     var ix, r1, r2, s;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex1(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex1(ix);
     A.setState(s);
-    r2 <- A.ex1(ix);
+    r2 <@ A.ex1(ix);
     return (r1 , r2);
   }
   
@@ -199,17 +199,17 @@ local module M = {
     var r;
     x1 <$ {0,1};
     x2 <$ {0,1};
-    r <- main_11(i);
+    r <@ main_11(i);
     return (r, x1 /\ x2);
   }  
 
   proc main_21(i:iat) = {
     var ix, r1, r2, s;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex2(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex2(ix);
     A.setState(s);
-    r2 <- A.ex1(ix);
+    r2 <@ A.ex1(ix);
     return (r1, r2);
   }
   
@@ -217,17 +217,17 @@ local module M = {
     var r;
     x1 <$ {0,1};
     x2 <$ {0,1};
-    r <- main_21(i);
+    r <@ main_21(i);
     return (r, !x1 /\ x2);
   }  
 
   proc main_22(i:iat) = {
     var ix,r1, r2, s;
-    ix <- B.init(i);
-    s <- A.getState();
-    r1 <- A.ex2(ix);
+    ix <@ B.init(i);
+    s <@ A.getState();
+    r1 <@ A.ex2(ix);
     A.setState(s);
-    r2 <- A.ex2(ix);
+    r2 <@ A.ex2(ix);
     return (r1,r2);
   }
   
@@ -235,42 +235,42 @@ local module M = {
     var r;
     x1 <$ {0,1};
     x2 <$ {0,1};
-    r <- main_22(i);
+    r <@ main_22(i);
     return (r, !x1 /\ !x2);
   }  
 
   proc main_run(i:iat) = {
     var ix, r;
-    ix <- B.init(i);
-    (r,x1) <- run(ix);
+    ix <@ B.init(i);
+    (r,x1) <@ run(ix);
     return r;
   }
 
   proc main_1(i:iat) = {
     var ix,r;
-    ix <- B.init(i);
-    r <- A.ex1(ix);
+    ix <@ B.init(i);
+    r <@ A.ex1(ix);
     return r;
   }
 
   proc main_1'(i:iat) = {
     var r;
     x1 <$ {0,1};
-    r <- main_1(i);
+    r <@ main_1(i);
     return (r, x1);
   }  
 
   proc main_2(i:iat) = {
     var ix, r;
-    ix <- B.init(i);
-    r <- A.ex2(ix);
+    ix <@ B.init(i);
+    r <@ A.ex2(ix);
     return r;
   }
 
   proc main_2'(i:iat) = {
     var r;
     x1 <$ {0,1};
-    r <- main_2(i);
+    r <@ main_2(i);
     return (r, !x1);
   }  
 }.
@@ -290,7 +290,7 @@ wp. call {2} (_: true ==> true). apply Afl.
 call {1} (_: true ==> true). apply Agl. skip. progress.
 qed.
 local lemma probEq_1 &m P i : Pr[ M.main_run(i) @ &m :  P res /\ M.x1 ] = Pr[ M.main_1'(i) @ &m : P res.`1 /\ res.`2 ].
-proof. byequiv. conseq (vau_uav_1 P). progress. smt. smt. auto. auto.
+proof. byequiv. conseq (vau_uav_1 P). progress. smt(). smt(). auto. auto.
 qed.
 local lemma bitsout_1 &m P j : Pr[ M.main_1'(j) @ &m : P res.`1 /\ res.`2 ] = Pr[ M.main_1(j) @ &m : P res ] / 2%r.
 proof.
@@ -299,17 +299,17 @@ proc.
 pose z := Pr[ M.main_1(j) @ &m : P res ].
 seq 1 : (M.x1) (1%r/2%r) z (1%r - 1%r/2%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd.  skip. progress.
-rnd.  skip. smt.
-conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r). smt. smt.
+rnd.  skip. progress. smt(@DBool).
+conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r). smt(). smt().
 have phl : phoare [ M.main_1 : ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ arg = j ==> P res ] 
            = Pr[ M.main_1(j) @ &m : P res ].
 bypr. move => &m0  pr1.
 byequiv (_: ={i, glob A, glob B} /\ i{1} = j  ==> _). proc. seq 1 1 : (={glob A, ix}). call Bsens.
 skip. progress.  
-call (_:true). skip.  smt.  progress. smt.  smt. smt. auto. smt.  auto.
+call (_:true). skip.  smt().  progress. smt().  smt(). smt(). auto. smt().  auto.
 call phl. skip. auto. progress. 
 inline*. wp. hoare. call (_:true). call(_:true).  wp.
-skip. smt. smt. auto. auto.
+skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_1 &m P i : Pr[ M.main_run(i) @ &m :  P res /\ M.x1 ]
                              = Pr[ M.main_1(i) @ &m : P res ] / 2%r.
@@ -330,7 +330,7 @@ call {1} (_: true ==> true). apply Afl. skip. progress.
 wp. call (_:true). skip. progress.
 qed.
 local lemma probEq_2  &m P j : Pr[ M.main_run(j) @ &m :  P res /\ !M.x1 ] = Pr[ M.main_2'(j) @ &m : P res.`1 /\ res.`2 ].
-proof. byequiv. conseq (vau_uav_2 P). progress. smt. smt. auto. auto.
+proof. byequiv. conseq (vau_uav_2 P). progress. smt(). smt(). auto. auto.
 qed.
 local lemma bitsout_2 &m P j : Pr[ M.main_2'(j) @ &m : P res.`1 /\ res.`2 ] = Pr[ M.main_2(j) @ &m : P res ] / 2%r.
 proof.
@@ -339,17 +339,17 @@ proc.
 pose z := Pr[ M.main_2(j) @ &m : P res ].
 seq 1 : (!M.x1) (1%r/2%r) z (1%r - 1%r/2%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd.  skip. progress.
-rnd.  skip. smt.
-conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r). smt. smt.
+rnd.  skip. progress. smt(@DBool).
+conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r). smt(). smt().
 have phl : phoare [ M.main_2 : ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P res ] 
            = (Pr[ M.main_2(j) @ &m : P res ]).
 bypr. move => &m0  pr1.
 byequiv (_: ={i,glob A, glob B} ==> _). proc. seq 1 1 : (={glob A,ix}). call Bsens.
 skip. auto.
-call (_:true). skip. smt. auto. auto. smt. auto.
+call (_:true). skip. smt(). auto. auto. smt(). auto.
 call phl. skip. auto.
 inline*. wp. hoare. call (_:true). call(_:true). wp. 
-skip. smt. smt. auto. auto.
+skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_2 &m P j : Pr[ M.main_run(j) @ &m :  P res /\ !M.x1 ]
                              = Pr[ M.main_2(j) @ &m : P res ] / 2%r.
@@ -376,7 +376,7 @@ seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 call (_:true). skip. progress.
 auto. auto.
 rewrite e0 e1 e2.
-rewrite Pr[mu_split M.x1]. rewrite main_lemma_1. rewrite main_lemma_2. smt. 
+rewrite Pr[mu_split M.x1]. rewrite main_lemma_1. rewrite main_lemma_2. smt(). 
 qed.
 
 
@@ -389,14 +389,16 @@ swap {2} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix} ). call Bsens. skip. auto.
 seq 3 3 : (={ix,glob A, s} /\ x{1} = M.x1{2} /\ x0{1} = M.x2{2}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
-if{1}.
+rnd. rnd. skip. smt(). sp.
+if{1}. simplify.
 seq 3 2 : (M.x1{1}).
-wp. call(_:true). wp. call {1} (_: true ==> true). apply Afl.
+wp. call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {1} (_: true ==> true). apply Afl.
 call {2} (_: true ==> true). apply Agl. skip. progress. sp.
 if{1}.  call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Agl.
 skip. progress.
@@ -407,7 +409,7 @@ skip. progress. sp.
 if{1}.
 call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 call(_:true). skip. auto.
 qed.
 local lemma uav_22 P : equiv [ M.main_22' ~ M.main : ={arg, glob A, glob B} 
@@ -419,10 +421,12 @@ swap {2} 9 -6.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{2} = M.x1{1} /\ x0{2} = M.x2{1}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{2}.
 seq 2 3 : (M.x1{1}).
-wp. call(_:true). wp. call {2} (_: true ==> true). apply Afl.
+call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {2} (_: true ==> true). apply Afl.
 call {1} (_: true ==> true). apply Agl. skip. progress. sp.
 if{2}.  call {2} (_:true ==> true). apply Afl.
 call {1} (_:true ==> true). apply Agl.
@@ -437,7 +441,7 @@ skip. progress. sp.
 if{2}.
 call {2} (_:true ==> true). apply Afl.
 call {1} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 call(_:true). skip. auto.
 qed.
 local lemma probEq_22 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ !M.x2 ] 
@@ -445,11 +449,11 @@ local lemma probEq_22 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.
 proof.
 have prle : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ !M.x2 ] 
          <= Pr[ M.main_22'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (vau_22 P). smt.   progress. progress.
+byequiv. conseq (vau_22 P). smt().   progress. progress.
 have prge : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ !M.x2 ] 
          >= Pr[ M.main_22'(j) @ &m : P res.`1.`1 /\ P res.`1.`2  /\ res.`2 ].
-byequiv. conseq (uav_22 P). smt. progress. progress.
-smt.
+byequiv. conseq (uav_22 P). smt(). progress. progress.
+smt().
 qed.
 local lemma bitsout_22 &m P j : Pr[ M.main_22'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ] 
                                = Pr[ M.main_22(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -460,19 +464,19 @@ pose z := Pr[ M.main_22(j) @ &m : P res.`1 /\ P res.`2 ].
 seq 2 : (!M.x1 /\ !M.x2) (1%r/4%r) z (1%r - 1%r/4%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd. rnd. skip. progress.
 seq 1 : (!M.x1) (1%r/2%r) (1%r/2%r) (1%r/2%r) (0%r). rnd. auto.
-rnd. skip. progress. smt.
-rnd.  skip. smt. rnd. skip. progress. smt.
-smt.
-conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt. smt.
+rnd. skip. progress. smt(@DBool).
+rnd.  skip. progress. smt(@DBool). rnd. skip. progress. smt(@DBool).
+smt().
+conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt(). smt().
 have phl : phoare [ M.main_22 : arg = j /\ ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) ==> P res.`1 /\ P res.`2 ] 
          = (Pr[ M.main_22(j) @ &m : P res.`1 /\ P res.`2 ]).
 bypr. move => &m0  pr1.
 byequiv (_: ={arg, glob A, glob B} ==> _). proc. seq 1 1 : (={glob A, ix}). call Bsens.
 skip. auto.
-call (_:true). call(_:true). call(_:true). call (_:true). skip. smt. auto. auto.
+call (_:true). call(_:true). call(_:true). call (_:true). skip. smt(). auto. auto.
 call phl. skip. auto.
 inline*. wp. hoare. call (_:true). call(_:true). call(_:true). call(_:true). call(_:true).
-wp. skip. smt. smt. auto. auto.
+wp. skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_22 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ !M.x2 ]
                              = Pr[ M.main_22(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -489,14 +493,16 @@ swap {2} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{1} = M.x1{2} /\ x0{1} = M.x2{2}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{1}.
 seq 3 2 : (i0{1} = ix{1} /\ M.x1{1}).
-wp. call(_:true). wp. call {1} (_: true ==> true). apply Afl.
+call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {1} (_: true ==> true). apply Afl.
 call {2} (_: true ==> true). apply Agl. skip. progress. sp.
 if{1}.  call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Afl.
-skip. smt. call {1} (_:true ==> true). apply Agl.
+skip. smt(). call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Afl.
 skip. progress.
 seq 3 2 : (={ix, glob A, r1, M.x1} /\ !M.x1{1} /\  x0{1} = M.x2{2}).
@@ -506,7 +512,7 @@ skip. progress. sp.
 if{1}. call(_:true). skip. progress.
 call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Afl.
-skip. smt.
+skip. smt().
 qed.
 local lemma uav_21 P : equiv [ M.main_21' ~ M.main : ={arg, glob A, glob B} ==> P res{1}.`1.`1 /\ P res{1}.`1.`2 /\ res{1}.`2 => P res{2}.`1 /\ P res{2}.`2 /\ !M.x1{2} /\ M.x2{2} ].
 proc.  inline*. wp.
@@ -516,14 +522,16 @@ swap {1} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{2} = M.x1{1} /\ x0{2} = M.x2{1}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{2}.
 seq 2 3 : (i0{2} = ix{2} /\ M.x1{1}).
-wp. call(_:true). wp. call {1} (_: true ==> true). apply Agl.
+call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {1} (_: true ==> true). apply Agl.
 call {2} (_: true ==> true). apply Afl. skip. progress. sp.
 if{2}.  call {2} (_:true ==> true). apply Afl.
 call {1} (_:true ==> true). apply Afl.
-skip. smt. call {2} (_:true ==> true). apply Agl.
+skip. smt(). call {2} (_:true ==> true). apply Agl.
 call {1} (_:true ==> true). apply Afl.
 skip. progress.
 seq 2 3 : (={ix, glob A, r1, M.x1} /\ !M.x1{1} /\  x0{2} = M.x2{1}).
@@ -533,18 +541,18 @@ skip. progress. sp.
 if{2}. call(_:true). skip. progress.
 call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 qed.
 local lemma probEq_21 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ M.x2 ] 
                              = Pr[ M.main_21'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
 proof.
 have prle : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ M.x2 ] 
          <= Pr[ M.main_21'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (vau_21 P). smt.   progress. progress.
+byequiv. conseq (vau_21 P). smt().   progress. progress.
 have prge : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ M.x2 ] 
          >= Pr[ M.main_21'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (uav_21 P). smt. progress. progress.
-smt.
+byequiv. conseq (uav_21 P). smt(). progress. progress.
+smt().
 qed.
 local lemma bitsout_21 &m P j : Pr[ M.main_21'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ] 
                               = Pr[ M.main_21(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -555,19 +563,19 @@ pose z := Pr[ M.main_21(j) @ &m : P res.`1 /\ P res.`2 ].
 seq 2 : (!M.x1 /\ M.x2) (1%r/4%r) z (1%r - 1%r/4%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd. rnd. skip. progress.
 seq 1 : (!M.x1) (1%r/2%r) (1%r/2%r) (1%r/2%r) (0%r). rnd. auto.
-rnd. skip. progress. smt.
-rnd.  skip. smt. rnd. skip. progress. smt.
-smt.
-conseq (_: (i = j /\ (glob A) = (glob A){m} /\ (glob B) = (glob B){m}) ==> P r.`1 /\ P r.`2). smt. smt.
+rnd. skip. progress. smt(@DBool).
+rnd.  skip. progress. smt(@DBool). rnd. skip. progress. smt(@DBool).
+smt().
+conseq (_: (i = j /\ (glob A) = (glob A){m} /\ (glob B) = (glob B){m}) ==> P r.`1 /\ P r.`2). smt(). smt().
 have phl : phoare [ M.main_21 : ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P res.`1 /\ P res.`2 ] 
            = (Pr[ M.main_21(j) @ &m : P res.`1 /\ P res.`2 ]).
 bypr. move => &m0  pr1.
 byequiv (_: ={arg, glob A, glob B} ==> _). proc. seq 1 1 : (={glob A, ix}). call Bsens.
 skip. auto.
-call (_:true). call(_:true). call(_:true). call (_:true). skip. smt. auto. auto. smt. auto.
+call (_:true). call(_:true). call(_:true). call (_:true). skip. smt(). auto. auto. smt(). auto.
 call phl. skip. auto.
 inline*. wp. hoare. call (_:true). call(_:true). call(_:true). call(_:true). call(_:true).
-wp. skip. smt. smt. auto. auto.
+wp. skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_21 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ !M.x1 /\ M.x2 ]
                              = Pr[ M.main_21(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -584,7 +592,7 @@ swap {2} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{1} = M.x1{2} /\ x0{1} = M.x2{2}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{1}.
 seq 3 2 : (i0{1} = ix{1}  /\ ={ix, glob A, r1, M.x1} /\ M.x1{1} /\  x0{1} = M.x2{2}).
 call (_:true). wp. call(_:true). skip. progress. sp.
@@ -592,13 +600,15 @@ if{1}. call(_:true). skip.
 progress.
 call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Afl.
-skip. smt.
+skip. smt().
 seq 3 2 : (i0{1} = ix{1}  /\ !M.x1{1}).
-wp. call(_:true). wp. call {1} (_: true ==> true). apply Agl.
+call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {1} (_: true ==> true). apply Agl.
 call {2} (_: true ==> true). apply Afl. skip. auto. sp.
 if{1}. call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Afl.
-skip. smt. call {1} (_:true ==> true). apply Agl.
+skip. smt(). call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Afl.
 skip. progress.
 qed.
@@ -611,15 +621,15 @@ swap {1} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{2} = M.x1{1} /\ x0{2} = M.x2{1}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{2}.
 seq 2 3 :  (i0{2} = ix{2} /\ ={ix, glob A, r1, M.x1, s} /\ M.x1{1} /\  x0{2} = M.x2{1}).
-call (_:true). wp. call(_:true). skip. smt. sp.
+call (_:true). wp. call(_:true). skip. smt(). sp.
 if{2}. wp.
 call(_:true). skip. progress.
 wp. call {1} (_:true ==> true). apply Afl. wp.
 call {2} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 wp.
 seq 4 3 : (i0{2} = ix{2} /\ !M.x1{1}).
 wp. call {2} (_: true ==> true). apply Ass.
@@ -637,11 +647,11 @@ local lemma probEq_11 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x
 proof.
 have prle : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ M.x2 ] 
             <= Pr[ M.main_11'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (vau_11 P). smt.   progress. progress.
+byequiv. conseq (vau_11 P). smt().   progress. progress.
 have prge : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ M.x2 ] 
             >= Pr[ M.main_11'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (uav_11 P). smt. progress. progress.
-smt.
+byequiv. conseq (uav_11 P). smt(). progress. progress.
+smt().
 qed.
 local lemma bitsout_11 &m P j : Pr[ M.main_11'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ] 
                                 = Pr[ M.main_11(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -652,19 +662,19 @@ pose z := Pr[ M.main_11(j) @ &m : P res.`1 /\ P res.`2 ].
 seq 2 : (M.x1 /\ M.x2) (1%r/4%r) z (1%r - 1%r/4%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd. rnd. skip. progress.
 seq 1 : (M.x1) (1%r/2%r) (1%r/2%r) (1%r/2%r) (0%r). rnd. auto.
-rnd. skip. progress. smt.
-rnd.  skip. smt. rnd. skip. progress. smt.
-smt.
-conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt. smt.
+rnd. skip. progress. smt(@DBool).
+rnd.  skip. progress. smt(@DBool). rnd. skip. progress. smt(@DBool).
+smt().
+conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt(). smt().
 have phl : phoare [ M.main_11 : ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P res.`1 /\ P res.`2 ] 
            = (Pr[ M.main_11(j) @ &m : P res.`1 /\ P res.`2 ]).
 bypr. move => &m0  pr1.
 byequiv (_: ={glob A, glob B, i} /\ i{1} = j ==> _). proc. seq 1 1 : (={glob A, ix}). call Bsens.
 skip. auto.
-call (_:true). call(_:true). call(_:true). call (_:true). skip. smt. auto. auto.  smt. auto.
+call (_:true). call(_:true). call(_:true). call (_:true). skip. smt(). auto. auto.  smt(). auto.
 call phl. skip. auto.
 inline*. wp. hoare. call (_:true). call(_:true). call(_:true). call(_:true). call(_:true). wp.
-skip. smt. smt. auto. auto.
+skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_11 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ M.x2 ]
                              = Pr[ M.main_11(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -681,22 +691,24 @@ swap {2} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{1} = M.x1{2} /\ x0{1} = M.x2{2}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{1}.
 seq 3 2 : (i0{1} = ix{1} /\ ={ix, glob A, r1, M.x1} /\ M.x1{1} /\  x0{1} = M.x2{2}).
 call (_:true). wp. call(_:true). skip. progress. sp.
 if{1}.
 call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Agl.
-skip. smt.
+skip. smt().
 call (_:true).
-skip. smt.
+skip. smt().
 seq 3 2 : (i0{1} = ix{1}  /\ !M.x1{1}).
-wp. call(_:true). wp. call {1} (_: true ==> true). apply Agl.
+call {1} (_: true ==> true). apply  Ass.
+call {2} (_: true ==> true). apply  Ass.
+wp. call {1} (_: true ==> true). apply Agl.
 call {2} (_: true ==> true). apply Afl. skip. auto. sp.
 if{1}.  call {1} (_:true ==> true). apply Afl.
 call {2} (_:true ==> true). apply Agl.
-skip. smt. call {1} (_:true ==> true). apply Agl.
+skip. smt(). call {1} (_:true ==> true). apply Agl.
 call {2} (_:true ==> true). apply Agl.
 skip. progress.
 qed.
@@ -709,16 +721,16 @@ swap {1} [3..4] -2. sp.
 seq 1 1 : (={glob A, ix}). call Bsens. skip. auto.
 seq 3 3 : (={ix, glob A, s} /\ x{2} = M.x1{1} /\ x0{2} = M.x2{1}).
 call(_:true).
-rnd. rnd. skip. smt. sp.
+rnd. rnd. skip. smt(). sp.
 if{2}.
 seq 2 3 :  (i0{2} = ix{2} /\ ={ix, glob A, r1, M.x1, s} /\ M.x1{1} /\  x0{2} = M.x2{1}).
-call (_:true). wp. call(_:true). skip. smt. sp.
+call (_:true). wp. call(_:true). skip. smt(). sp.
 if{2}. wp.
 call {1} (_:true ==> true). apply Agl. wp.
 call {2} (_:true ==> true). apply Afl.
-skip. smt.
+skip. smt().
 wp. call (_:true).
-skip. smt.
+skip. smt().
 seq 4 3 : (!M.x1{1}).
 wp. call {2} (_: true ==> true). apply Ass.
 wp. call {1} (_: true ==> true). apply Agl.
@@ -735,11 +747,11 @@ local lemma probEq_12 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x
 proof.
 have prle : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ !M.x2 ] 
             <= Pr[ M.main_12'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (vau_12 P). smt.   progress. progress.
+byequiv. conseq (vau_12 P). smt().   progress. progress.
 have prge : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ !M.x2 ] 
             >= Pr[ M.main_12'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ].
-byequiv. conseq (uav_12 P). smt. progress. progress.
-smt.
+byequiv. conseq (uav_12 P). smt(). progress. progress.
+smt().
 qed.
 local lemma bitsout_12 &m P j : Pr[ M.main_12'(j) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 ] 
                                 = Pr[ M.main_12(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -750,19 +762,19 @@ pose z := Pr[ M.main_12(j) @ &m : P res.`1 /\ P res.`2 ].
 seq 2 : (M.x1 /\ !M.x2) (1%r/4%r) z (1%r - 1%r/4%r) 0%r ((glob A) = (glob A){m} /\ (glob B) = (glob B){m} /\ i = j).
 rnd. rnd. skip. progress.
 seq 1 : (M.x1) (1%r/2%r) (1%r/2%r) (1%r/2%r) (0%r). rnd. auto.
-rnd. skip. progress. smt.
-rnd.  skip. smt. rnd. skip. progress. smt.
-smt.
-conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt. smt.
+rnd. skip. progress. smt(@DBool).
+rnd.  skip. smt(@DBool). rnd. skip. progress. smt(@DBool).
+smt().
+conseq (_: ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P r.`1 /\ P r.`2). smt(). smt().
 have phl : phoare [ M.main_12 : ((glob A) = (glob A){m} /\ (glob B) = (glob B){m}) /\ i = j ==> P res.`1 /\ P res.`2 ] 
            = (Pr[ M.main_12(j) @ &m : P res.`1 /\ P res.`2 ]).
 bypr. move => &m0  pr1.
 byequiv (_: ={glob A, glob B, arg} ==> _). proc. seq 1 1 : (={glob A, ix}). call Bsens.
 skip. auto.
-call (_:true). call(_:true). call(_:true). call (_:true). skip. smt. auto. auto. smt. auto.
+call (_:true). call(_:true). call(_:true). call (_:true). skip. smt(). auto. auto. smt(). auto.
 call phl. skip. auto.
 inline*. wp. hoare. call (_:true). call(_:true). call(_:true). call(_:true). call(_:true).
-wp. skip. smt. smt. auto. auto.
+wp. skip. smt(). smt(). auto. auto.
 qed.
 local lemma main_lemma_12 &m P j : Pr[ M.main(j) @ &m :  P res.`1 /\ P res.`2 /\ M.x1 /\ !M.x2 ]
                              = Pr[ M.main_12(j) @ &m : P res.`1 /\ P res.`2 ] / 4%r.
@@ -790,7 +802,7 @@ rewrite Pr[mu_eq]. auto. auto. rewrite z. clear z.
 have z : Pr[M.main(j) @ &m : ((P res.`1 /\ P res.`2) /\ M.x1) /\ !M.x2] = Pr[M.main(j) @ &m : P res.`1 /\ P res.`2 /\ M.x1 /\ !M.x2].
 rewrite Pr[mu_eq]. auto. auto. rewrite z. clear z.
 rewrite (main_lemma_11 &m P). rewrite (main_lemma_12 &m). rewrite (main_lemma_21 &m).
-rewrite (main_lemma_22 &m). smt.
+rewrite (main_lemma_22 &m). smt().
 qed.
 
 

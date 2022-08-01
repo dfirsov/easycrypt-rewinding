@@ -59,7 +59,7 @@ module GG = {
 op supp_size (d : 'a distr) : int = size (to_seq (support d)).
 
 
-lemma winPr &m : forall (A <:Adversary {GG}), forall q, 0 <= q =>
+lemma winPr &m : forall (A <:Adversary {-GG}), forall q, 0 <= q =>
  Pr[ Main(GG,A).main(q) @ &m : GG.win  ] 
     <= q%r  / (supp_size bD)%r.
 proof. move => A. move => q q_pos.
@@ -68,7 +68,7 @@ byequiv (_: ={glob A, glob GG, arg} /\ GG.q{1} = GG.q{2} /\ arg{1} = q  ==> _). 
 seq 1 1 : (={glob A, glob GG} /\ GG.q{1} = GG.q{2} /\ (0 <= GG.c <= GG.q){1} /\ GG.q{1} = q).
 inline *.   wp. skip. progress.
  call (_: (0 <= GG.c <= GG.q){1} /\ ={glob GG} /\ GG.q{1} = q).
-proc. sp. if. smt.  wp. rnd. skip. smt. skip. smt.
+proc. sp. if. smt().  wp. rnd. skip. smt(). skip. smt().
 skip. progress. auto.  auto.  
   fel 1 GG.c (fun x => 1%r / (supp_size bD)%r) q GG.win [GG.guess : (GG.c < GG.q)] => //.
    rewrite BRA.sumr_const RField.intmulr count_predT.
@@ -80,9 +80,10 @@ skip. progress. auto.  auto.
     rnd;auto => &hr /> ??? .
     move => z.
     rewrite mu1_uni_ll. apply bDU. apply bDL.
-  smt.
+    rewrite /supp_size.
+    case (x{hr} \in bD). smt(@List). smt(@Real @List).
    move=> c;proc;sp;inline *.
     by rcondt 1 => //;wp;conseq (_: _ ==> true) => // /#.
   move=> b c;proc;sp;inline *;if => //.
-  sp. wp. rnd.  skip.  smt.
+  sp. wp. rnd.  skip.  smt().
 qed.

@@ -14,7 +14,7 @@ lemma no_globs_rew : forall (A <: Rew), (forall (x y : glob A), x = y) =>
   islossless A.setState.
 proof. move => A. progress.
 pose f := fun (x : glob A) => tt.
-have finj : injective f. rewrite /injective. smt.
+have finj : injective f. rewrite /injective. smt().
 exists f. split.  apply finj.
 split.
 move => &m. byphoare. proc*. call H0. skip. progress. apply H. auto. auto.

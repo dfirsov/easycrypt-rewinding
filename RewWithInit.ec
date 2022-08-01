@@ -53,79 +53,79 @@ module QQ(A : RewRun, B : Initializer) = {
 
     proc main51(i:iat) = {
       var rb,s;
-      rb <- B.init(i);
-      s <- A.getState();
+      rb <@ B.init(i);
+      s <@ A.getState();
       return (rb, s);
     }
 
     proc main52(i : irt) = {
       var r;
-      r <- G.main(i);
+      r <@ G.main(i);
       return r;
     }
     
     proc main5(i:iat) = {
       var s, r;
-      s <- main51(i);
-      r <- main52(s.`1);
+      s <@ main51(i);
+      r <@ main52(s.`1);
       return (r,s);
     }
 
     proc main6(i:iat) = {
       var s, r;
-      s <- main51(i);
-      r <- A.run(s.`1);
+      s <@ main51(i);
+      r <@ A.run(s.`1);
       return ((s.`1, r),s);
     }
 
     proc main(i:iat) = {
       var s, r0, r1, r2;
-      r0 <- B.init(i);
-      s <- A.getState();
-      r1 <- A.run(r0);
+      r0 <@ B.init(i);
+      s <@ A.getState();
+      r1 <@ A.run(r0);
       A.setState(s);
-      r2 <- A.run(r0);
+      r2 <@ A.run(r0);
       return ((r0,r1), (r0, r2));
     }
 
     proc main_run'(i:iat) = {
       var s, r, r0;
-      r0 <- B.init(i);
-      s <- A.getState();
-      r <- A.run(r0);
+      r0 <@ B.init(i);
+      s <@ A.getState();
+      r <@ A.run(r0);
       return (r0, r);
     }
 
     proc main_run(i:iat) = {
       var r, r0;
-      r0 <- B.init(i);
-      r <- A.run(r0);
+      r0 <@ B.init(i);
+      r <@ A.run(r0);
       return (r0, r);
     }
 }.
 
 
 section.
-declare module A : RewRun.
-declare module B : Initializer.
+declare module A <: RewRun.
+declare module B <: Initializer.
 
 
 local module RunMe = {
   module QQ = QQ(A,B)
   proc main(i:iat) : irt * sbits = {
       var s, r;
-      s <- QQ.main51(i);
-      r <- A.run(s.`1);
+      s <@ QQ.main51(i);
+      r <@ A.run(s.`1);
       return s;    
   }
 }.
 
 
 (* ASSUMPTIONS *)
-axiom Bsens : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ].    
-axiom Bsens2 : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ].    
+declare axiom Bsens : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={glob A} ].    
+declare axiom Bsens2 : equiv[ B.init ~ B.init : ={arg, glob A, glob B} ==> ={res, glob A} ].    
 
-axiom RewProp :
+declare axiom RewProp :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -135,8 +135,8 @@ axiom RewProp :
   islossless A.setState.
 
   
-axiom ll_A_run : islossless A.run.
-axiom ll_B_init : islossless B.init.
+declare axiom ll_A_run : islossless A.run.
+declare axiom ll_B_init : islossless B.init.
 (* /ASSUMPTIONS *)
 
 
@@ -153,7 +153,7 @@ move => fA [s1 [s2 [s3]]] s4.
 call (_:true). call(_:true).
 call (_:true).
 wp.
-conseq (_: exists ga, (glob A){1} = ga /\ rb{1} = r0{2} /\ ={glob A} ==> _). smt.
+conseq (_: exists ga, (glob A){1} = ga /\ rb{1} = r0{2} /\ ={glob A} ==> _). smt().
 elim*. move => ga. call {1} (s2 ga).
 skip. progress. auto. auto.
 qed.
@@ -188,7 +188,7 @@ local lemma yyy &m0 &m1 M a : (glob A){m0} = (glob A){m1} =>
   = Pr[QQ(A,B).main52(a) @ &m0 : M res.`1 /\ M res.`2]. 
 move => q. byequiv. proc. 
 inline*. wp. call(_:true). wp. call (_:true). call(_:true). 
-call(_:true).  wp. skip. progress. smt.  auto. auto.
+call(_:true).  wp. skip. progress. smt().  auto. auto.
 qed.
 
 
@@ -215,7 +215,7 @@ progress.
 exists f.
 progress. apply ll_A_run. (* apply ll_B_run.*)
 bypr.  move => &m1 eq.
-have jk  : (glob A){m0} = (glob A){m1}. timeout 20.  smt.
+have jk  : (glob A){m0} = (glob A){m1}. smt().
 elim eq. move => _ z. rewrite z.
 apply (yyy &m0 &m1 ). auto.
 qed.
@@ -259,56 +259,56 @@ proc. seq 1 : (f (glob A) = s0) 0%r 0%r 1%r 0%r (f (glob A) = s.`2).
 inline*. wp.
 seq 2 : (true).
 call (_:true). wp.  skip. auto.
-conseq (_: exists q, q = glob A ==> _). smt.
+conseq (_: exists q, q = glob A ==> _). smt().
 elim*. move => q.
 inline*. wp.
 call (H1 q).
-skip. smt.
+skip. smt().
 hoare.
 inline*.
 wp.
 seq 2 : (true). 
 call (_:true). wp. skip. auto.
-conseq (_: exists q, q = glob A ==> _). smt.
+conseq (_: exists q, q = glob A ==> _). smt().
 elim*. move => q.
 call (H1 q).
-skip. smt.
+skip. smt().
 simplify.
 hoare. call(_:true).
-skip. smt. auto. auto. auto.
+skip. smt(). auto. auto. auto.
 byphoare.
 proc.
 seq 1 : (f (glob A) = s0) 0%r 0%r 1%r 0%r (f (glob A) = s.`2). 
 inline*. wp.
 seq 2 : (true). 
 call (_:true).  wp. skip. auto.
-conseq (_: exists q, q = glob A ==> _). smt.
+conseq (_: exists q, q = glob A ==> _). smt().
 elim*. move => q.
 inline*. wp.
 call (H1 q).
-skip. smt.
+skip. smt().
 hoare.
 inline*.
 wp.
 seq 2 : (true). sp.
 call (_:true). skip. auto.
-conseq (_: exists q, q = glob A ==> _). smt.
+conseq (_: exists q, q = glob A ==> _). smt().
 elim*. move => q.
 call (H1 q).
-skip. smt.
+skip. smt().
 simplify.
 hoare. call(_:true).
 inline*.  wp.  call(_:true). wp. call(_:true). call(_:true).  call (_: true).  wp. skip. auto.
-skip. smt. auto. auto. auto.
+skip. smt(). auto. auto. auto.
 byphoare.
 proc.
 seq 1 : (true) 1%r 0%r 1%r 0%r . 
 call (_:true).  skip. auto.
-conseq (_: exists q, q = glob A ==> _). smt.
+conseq (_: exists q, q = glob A ==> _). smt().
 elim*. move => q.
 hoare.
 call (H1 q).
-skip. smt. exfalso. auto.
+skip. smt(). exfalso. auto.
 auto. auto. auto.
 byphoare (_ :  (arg = i) /\ (glob A) = (glob A){m0} /\ (glob B) = (glob B){m0} ==> _).
 proc*.
@@ -320,14 +320,14 @@ inline*.
 seq 2 : (i1 = i0). sp.
 call (_: true).  skip. progress.
 conseq (_: exists w, exists z, glob A = w /\ glob B = z /\ i1 = i0 ==>  i1 = i0 /\ f (glob A) = s.`2 /\ rb = s.`1).
-smt. smt. elim*.  move => w z. wp.
+smt(). smt(). elim*.  move => w z. wp.
 conseq (_: _ ==> (glob A) = w  /\ s0 = f w /\ i1 = i0 /\ rb =  rb).
 progress.
 call (H1 w).
 progress. 
 call (www &m0  i (f (glob A){n0}) r). wp.
 skip. progress.
-simplify. smt.
+simplify. smt().
 have H8 : phoare[ QQ(A,B).main52 : f (glob A) =  f (glob A){n0} /\ arg = r 
           ==> M res.`1 /\ M res.`2] 
           = Pr[QQ(A,B).main52(r) @ &n0 : M res.`1 /\ M res.`2 ]. 
@@ -339,7 +339,7 @@ apply H8. wp. call q3. skip. progress.
 wp. hoare. call(_:true). inline*.  wp. call(_:true). wp. 
 call(_:true). call(_:true).  call (_: true).  wp. skip. auto.
 skip. progress.
-smt. smt. auto. auto.
+smt(). smt(). auto. auto.
 qed.
 
 
@@ -387,7 +387,7 @@ have eq2 : Pr[QQ(A,B).main5(i) @ &m0 : M res.`1.`1
              * Pr[QQ(A,B).main52(r) @ &n0 : M res.`1 /\ M res.`2].
 rewrite (H10 &m0 M &n0).  by reflexivity.
 auto. rewrite eq2 eq.
-rewrite (dbl_main_no_number A). apply RewProp. smt.
+rewrite (dbl_main_no_number A). apply RewProp. smt().
 qed.
 
 
@@ -439,7 +439,7 @@ seq 2 : (s.`2 = f (glob A){n0} /\ s.`1 = r)
 inline*. seq 1 : (i1 = i0). wp. skip. auto. seq 1 : (i1 = i0).
 call (_:true). skip. auto.
 conseq (_: exists w, exists z, glob A = w /\ glob B = z ==> _).
-smt. progress. elim*.  move => w z. wp.
+smt(). progress. elim*.  move => w z. wp.
 conseq (_: _ ==> (glob A) = w  /\ s0 = f w ).
 progress. call (H1 w).  skip.
 progress. call (www &m0 i (f (glob A){n0}) r).
@@ -448,19 +448,19 @@ have q2 : forall &n0, f (glob A){n0} = f (glob A){n0} =>
   phoare[ A.run : arg = r /\ f (glob A) = f (glob A){n0} 
   ==> M (r, res)] = Pr[A.run(r) @ &n0 : M (r, res)]. 
 move => &no eq. bypr. move => &mo eq2. byequiv.
-proc*. call (_:true). skip. progress. smt. smt. smt. smt.
+proc*. call (_:true). skip. progress. smt(). smt(). smt(). smt().
 have q1 : Pr[A.run(r) @ &n0 : M (r, res)] = y. auto.
 have q3 : phoare[ A.run : arg = r /\ f (glob A) = f (glob A){n0} 
           ==> M (r, res)] = y.  rewrite - q1.
-apply (q2 &n0). auto. call q3. skip. progress. smt.
+apply (q2 &n0). auto. call q3. skip. progress. smt().
 wp. hoare. call(_:true). inline*. wp.  
-skip. smt. simplify. smt. auto. auto.
+skip. smt(). simplify. smt(). auto. auto.
 qed.
 
 
 local lemma bigLemma ['a] (f : 'a -> real) : forall l x, 
   big predT f (x :: l) = f x + big predT f l.
-proof. apply list_ind. smt. move => x l ih. simplify. smt.
+proof. apply list_ind. smt(). move => x l ih. simplify. smt().
 qed.
 
 
@@ -469,7 +469,7 @@ local lemma lll &m P i : forall (M : sbits list), uniq M =>
   = big predT  (fun x => Pr[ QQ(A,B).main5(i) @ &m : P res.`1.`1 
                            /\ P res.`1.`2 /\ (res.`2.`2 = x) ]) M.
 proof. apply list_ind.
-simplify. rewrite Pr[mu_false]. smt.
+simplify. rewrite Pr[mu_false]. smt().
 simplify.   
 move => x l ih. 
 rewrite (bigLemma (fun (x0 : sbits) => Pr[QQ(A,B).main5(i) @ &m : P res.`1.`1 
@@ -479,8 +479,8 @@ have qq : Pr[QQ(A,B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2
             /\ (res.`2.`2 = x \/ (res.`2.`2 \in l))]
         = Pr[QQ(A,B).main5(i) @ &m : (P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x) 
             \/ (P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 \in l)] .
-rewrite Pr[ mu_eq ]. smt. auto. rewrite qq.
-rewrite Pr[ mu_disjoint ]. smt.
+rewrite Pr[mu_eq ]. smt(). auto. rewrite qq.
+rewrite Pr[ mu_disjoint ]. smt().
 auto.
 qed.
 
@@ -527,22 +527,22 @@ split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
 split. assumption. split. assumption. split. assumption.  split. assumption.
-move => P i. apply list_ind. simplify. rewrite Pr[mu_false]. smt.
+move => P i. apply list_ind. simplify. rewrite Pr[mu_false]. smt().
 simplify.
 move => x l ih.
 elim. move=> xl ul.
 have qq : Pr[QQ(A,B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ (res.`2 = x \/ (res.`2 \in l))]
         = Pr[QQ(A,B).main5(i) @ &m : (P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x) \/ (P res.`1.`1 /\ P res.`1.`2 /\ res.`2 \in l)] .
-rewrite Pr[ mu_eq ]. smt. auto.
+rewrite Pr[ mu_eq ]. smt(). auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m :
    P res.`1.`1 /\
    P res.`1.`2 /\ (res.`2 = x \/ (res.`2 \in l)) ]
   = Pr[QQ(A, B).main5(i) @ &m :
        P res.`1.`1 /\
        P res.`1.`2 /\ (res.`2 = x  \/ (res.`2 \in l))].
-rewrite Pr[mu_eq]. smt. auto.
+rewrite Pr[mu_eq]. smt(). auto.
 rewrite qq.
-rewrite Pr[ mu_disjoint ]. smt.
+rewrite Pr[ mu_disjoint ]. smt().
 pose E (x0 : irt * sbits) :=  (fun (y : real) =>
           exists &l, f (glob A){l} = x0.`2 /\ Pr[A.run(x0.`1) @ &l : P (x0.`1, res)] = y).
 rewrite (bigLemma (fun (x0 : irt * sbits) =>
@@ -563,27 +563,27 @@ have : E x (some_real (E x)).
 apply (some_real_prop (E x)).
 exists (Pr[ A.run(x.`1) @ &lk : P (x.`1, res) ]).
 split. progress. simplify E. exists &lk.
-smt.
+smt().
 move => q. elim.
 move => &l0.
 elim.
 move => o1 o2.    rewrite - o2.
-byequiv.  proc*. call (_:true). skip. progress. smt. smt. smt.
+byequiv.  proc*. call (_:true). skip. progress. smt(). smt(). smt().
 elim.
 move => &l. elim.
 move => c eq.
 rewrite - eq.
-have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
+have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x]
-     = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt. auto.
+     = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt(). auto.
 rewrite (H10  &m &l  P x.`2 i ).
- smt.  auto.
+ smt().  auto.
 move => dnem.
-have : (forall &n0, f (glob A){n0} <> x.`2). smt.
+have : (forall &n0, f (glob A){n0} <> x.`2). smt().
 move => prr.
-have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
+have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x]
-     = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt. auto.
+     = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1 ] . rewrite Pr[mu_eq]. smt(). auto.
 rewrite (H9 x.`2). apply prr.
 rewrite (H8 x.`2). apply prr.
 auto.
@@ -597,7 +597,7 @@ local module W2 = {
   module Q = QQ(A,B)
   proc main(i:iat) = {
     var r;
-    r <- Q.main5(i);
+    r <@ Q.main5(i);
     return r.`2;
   }
 }.
@@ -657,7 +657,7 @@ move => P i.
      inline W2.Q.main5.
      wp.   call(_: (={arg, glob A}) ==> ={res}). sim.
     call (_: (={arg, glob A, glob B}) ==> ={glob A, res}). 
-    proc. seq 1 1 : (={rb, glob A}). call Bsens2. skip. auto. call (_:true). skip. smt. wp. skip. smt.
+    proc. seq 1 1 : (={rb, glob A}). call Bsens2. skip. auto. call (_:true). skip. smt(). wp. skip. smt().
     auto.  auto. 
     exists D J.
     split.
@@ -690,8 +690,8 @@ some_real
      exists &l,
        f (glob A){l} = x.`2 /\ Pr[A.run(x.`1) @ &l : P (x.`1, res)] = y).
 move => x.
-rewrite (H13 P i (x :: []) ). smt.
-simplify big. rewrite /predT /g. simplify. smt.
+rewrite (H13 P i (x :: []) ). smt().
+simplify big. rewrite /predT /g. simplify. smt().
 auto.
 elim refl1. move => D J p. elim p. move => p1 [p2 p3].
 have conv1 : RealSeq.convergeto (fun (n : int) => big predT g (pmap J (range 0 n))) (sum g).
@@ -703,16 +703,16 @@ rewrite p1. rewrite /pred1 /g.
   have ff: Pr[QQ(A, B).main5(i) @ &m :
           P res.`1.`1 /\ P res.`1.`2 /\ res.`2 = x]
         <= Pr[QQ(A, B).main5(i) @ &m : res.`2 = x].
-rewrite Pr[mu_sub]. smt. auto.
+rewrite Pr[mu_sub]. smt(). auto.
 rewrite -  zz.
-smt.
+smt(@Distr).
 rewrite /summable.  
 exists 1%r.
 move => J' J'u. 
 have ->: (fun (x : irt * sbits) => `|g x|)
      = (fun (x : irt * sbits) => g x).
 apply fun_ext. move => x. rewrite /g.
-rewrite - zz. smt.
+rewrite - zz. smt(@Distr).
 rewrite /g. rewrite -  (H13 P). apply J'u.
 rewrite Pr[mu_le1]. auto.
 have lim1 : lim ((fun (n : int) => big predT g (pmap J (range 0 n)))) = (sum g). 
@@ -726,14 +726,14 @@ move => N Np. exists N.
 move => n np.
 have ->: big predT g (pmap J (range 0 n))
         = Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ res.`2 \in (pmap J (range 0 n)) ].
-rewrite H13. smt.
+rewrite H13. smt(@List).
 auto.
 have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2] =
  Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ (res.`2 \in pmap J (range 0 n)) ]   +  Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 /\ !(res.`2 \in pmap J (range 0 n)) ].
   have ->: Pr[QQ(A, B).main5(i) @ &m : P res.`1.`1 /\ P res.`1.`2 ] = Pr[QQ(A, B).main5(i) @ &m :  (P res.`1.`1 /\ P res.`1.`2 /\ (res.`2 \in pmap J (range 0 n)) \/ P res.`1.`1 /\ P res.`1.`2 /\ !(res.`2 \in pmap J (range 0 n)) ) ].
-    rewrite Pr[mu_eq]. smt. auto.
+    rewrite Pr[mu_eq]. smt(). auto.
 rewrite Pr[mu_disjoint].
-smt.
+smt().
 auto. 
 have ->: Pr[QQ(A, B).main5(i) @ &m :
      P res.`1.`1 /\ P res.`1.`2 /\ (res.`2 \in pmap J (range 0 n))] -
@@ -742,47 +742,47 @@ have ->: Pr[QQ(A, B).main5(i) @ &m :
    Pr[QQ(A, B).main5(i) @ &m :
       P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]) = 
    - Pr[QQ(A, B).main5(i) @ &m :
-      P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]. smt.
+      P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]. smt().
 have ->: `|- Pr[QQ(A, B).main5(i) @ &m :
        P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]| = Pr[QQ(A, B).main5(i) @ &m :
-       P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]. smt.
+       P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))]. smt(@Distr).
 have o : Pr[QQ(A, B).main5(i) @ &m :
-   P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))] <= Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]. rewrite Pr[mu_sub]. smt. auto. 
+   P res.`1.`1 /\ P res.`1.`2 /\ ! (res.`2 \in pmap J (range 0 n))] <= Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]. rewrite Pr[mu_sub]. smt(). auto. 
 have : Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] < eps.
-   have ->: Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] = `|Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]|. smt.
+   have ->: Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] = `|Pr[QQ(A, B).main5(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]|. smt(@Distr).
 apply Np. apply np.
-smt.
-smt.
+smt().
+smt().
 qed.
 
 
 local lemma jjj &m &n : exists (f : glob A -> sbits),
        injective f
-    /\ (forall (x : glob A),
+   /\ (forall (x : glob A),
          phoare[ A.getState : (glob A) = x ==> (glob A) = x  /\ res = f x ] = 1%r)
-    /\ (forall (x : glob A),
+   /\ (forall (x : glob A),
          hoare[ A.getState : (glob A) = x ==> (glob A) = x  /\ res = f x ])
-    /\ (forall (x: glob A),
+   /\ (forall (x: glob A),
          phoare[A.setState: b = f x ==> glob A = x] = 1%r)
-    /\ (forall (x: glob A),
+   /\ (forall (x: glob A),
          hoare[A.setState: b = f x ==> glob A = x])
-    /\ islossless A.setState
-    /\ islossless A.run
+   /\ islossless A.setState
+   /\ islossless A.run
 (*    /\ islossless B.init  *)
     (* assumptions above, payload below *)
-    /\ (forall &m M s0 a, f (glob A){m} = s0 =>
+   /\ (forall &m M s0 a, f (glob A){m} = s0 =>
          phoare [ QQ(A,B).main52 : f (glob A) = s0 /\ arg = a ==> M res.`1 /\ M res.`2  ]
        = Pr[ QQ(A,B).main52(a) @ &m : M res.`1 /\ M res.`2  ])
-    /\ (forall s0 r, (forall &n, f (glob A){n} <> s0) =>
+   /\ (forall s0 r, (forall &n, f (glob A){n} <> s0) =>
          (forall &m M i, Pr[ QQ(A,B).main6(i) @ &m : M res.`1 /\ res.`2.`2 = s0 /\ res.`2.`1 = r ] = 0%r))
-    /\ (forall s0 r, (forall &n , f (glob A){n} <> s0) =>
+   /\ (forall s0 r, (forall &n , f (glob A){n} <> s0) =>
          (forall &m M i, Pr[ QQ(A,B).main5(i) @ &m : M res.`1.`1 /\ M res.`1.`2 /\ res.`2.`2 = s0 /\ res.`2.`1 = r ] = 0%r))
-    /\ (forall s0 r, (forall &n , f (glob A){n} <> s0) =>
+   /\ (forall s0 r, (forall &n , f (glob A){n} <> s0) =>
          (forall &m i, Pr[ QQ(A,B).main51(i) @ &m :  res.`2 = s0  /\ res.`1 = r ] = 0%r))
    /\ (forall &m &n M s0 i r, f (glob A){n} = s0 =>
         Pr[ QQ(A,B).main5(i) @ &m : M res.`1.`1 /\ M res.`1.`2 /\ res.`2.`2 = s0 /\ res.`2.`1 = r ]
         = Pr[ QQ(A,B).main51(i) @ &m : res.`2 = s0 /\ res.`1 = r ] * Pr[ A.run(r) @ &n : M (r, res) ] * Pr[ A.run(r) @ &n : M (r, res) ])
-    /\ (forall &m &n M s0 i r, f (glob A){n} = s0 =>
+   /\ (forall &m &n M s0 i r, f (glob A){n} = s0 =>
         Pr[ QQ(A,B).main6(i) @ &m : M res.`1 /\ res.`2.`2 = s0 /\ res.`2.`1 = r ]
       = Pr[ QQ(A,B).main51(i) @ &m : res.`2 = s0 /\ res.`1 = r ] * Pr[ A.run(r) @ &n : M (r, res) ])
    /\ (forall &m &n M s0 i r, f (glob A){n} = s0 =>
@@ -800,15 +800,15 @@ split. assumption. split. assumption. split. assumption. split. assumption.
 split. assumption.
 split. assumption. split. assumption. split. assumption.  split. assumption. split. assumption.
 move => P i.
-apply list_ind. simplify. rewrite Pr[mu_false]. smt.
+apply list_ind. simplify. rewrite Pr[mu_false]. smt().
 simplify.
 move => x l ih .
 elim. move=> xl ul.
 have : Pr[QQ(A,B).main6(i) @ &m : P res.`1 /\ (res.`2 = x \/ (res.`2 \in l))  ]
         = Pr[QQ(A,B).main6(i) @ &m : (P res.`1 /\ res.`2 = x ) \/ (P res.`1 /\ res.`2 \in l ) ].
-rewrite Pr[ mu_eq ]. smt. auto.
+rewrite Pr[ mu_eq ]. smt(). auto.
 move => qq. rewrite qq.
-rewrite Pr[ mu_disjoint ]. smt.
+rewrite Pr[ mu_disjoint ]. smt().
 pose E (x0 : irt * sbits) :=  (fun (y : real) =>
           exists &l, f (glob A){l} = x0.`2 /\ Pr[A.run(x0.`1) @ &l : P (x0.`1, res)] = y).
 rewrite  (bigLemma (fun (x0 : (irt * sbits)) =>
@@ -826,28 +826,28 @@ have : E x (some_real (E x)).
 apply (some_real_prop (E x)).
 exists (Pr[ A.run(x.`1) @ &lk : P (x.`1, res) ]).
 split. progress. simplify E. exists &lk.
-smt.
+smt().
 move => q. elim.
 move => &l0.
 elim.
 move => o1 o2.    rewrite - o2.
-byequiv. proc*. call(_:true). skip. progress. smt. smt. smt.
+byequiv. proc*. call(_:true). skip. progress. smt(). smt(). smt().
 elim.
 move => &l. elim.
 move => c eq.
 rewrite - eq.
-have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
-have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
+have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
+have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 rewrite (H11 &m &l P  x.`2 i ).
-smt.  smt.
+smt().  smt().
 move => dnem.
-have : (forall &n0, f (glob A){n0} <> x.`2). smt.
+have : (forall &n0, f (glob A){n0} <> x.`2). smt().
 move => prr.
-have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
-have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt. auto.
+have ->: Pr[QQ(A, B).main51(i) @ &m : res = x] = Pr[QQ(A, B).main51(i) @ &m : res.`2 = x.`2 /\ res.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
+have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 = x] = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2.`2 = x.`2 /\ res.`2.`1 = x.`1].  rewrite Pr[mu_eq]. smt(). auto.
 rewrite (H9 x.`2). apply prr.
 rewrite (H7 x.`2). apply prr.
-smt.
+smt().
 move => opp.
 rewrite opp.
 auto.
@@ -858,7 +858,7 @@ local module W3 = {
   module Q = QQ(A,B)
   proc main(i:iat) = {
     var r;
-    r <- Q.main6(i);
+    r <@ Q.main6(i);
     return r.`2;
   }
 }.
@@ -922,7 +922,7 @@ move => P i.
      inline W3.Q.main6.
      wp.   call(_: (={arg, glob A}) ==> ={res}). sim.
     call (_: (={arg, glob A, glob B}) ==> ={glob A, res}). 
-    proc. seq 1 1 : (={rb, glob A}). call Bsens2. skip. auto. call (_:true). skip. smt. wp. skip. smt.
+    proc. seq 1 1 : (={rb, glob A}). call Bsens2. skip. auto. call (_:true). skip. smt(). wp. skip. smt().
     auto.  auto. 
     exists D J.
     split.
@@ -947,8 +947,8 @@ some_real
      exists &l,
        f (glob A){l} = x.`2 /\ Pr[A.run(x.`1) @ &l : P (x.`1, res)] = y) .
 move => x.
-rewrite (H14 P i (x :: []) ). smt.
-simplify big. rewrite /predT /g. simplify. smt.
+rewrite (H14 P i (x :: []) ). smt().
+simplify big. rewrite /predT /g. simplify. smt().
 auto.
 elim refl1. move => D J p. elim p. move => p1 [p2 p3].
 have conv1 : RealSeq.convergeto (fun (n : int) => big predT g (pmap J (range 0 n))) (sum g).
@@ -960,16 +960,16 @@ rewrite p1. rewrite /pred1 /g.
   have ff: Pr[QQ(A, B).main6(i) @ &m :
           P res.`1 /\ res.`2 = x]
         <= Pr[QQ(A, B).main6(i) @ &m : res.`2 = x].
-rewrite Pr[mu_sub]. smt. auto.
+rewrite Pr[mu_sub]. smt(). auto.
 rewrite -  zz.
-smt.
+smt(@Distr).
 rewrite /summable.  
 exists 1%r.
 move => J' J'u. 
 have ->: (fun (x : irt * sbits) => `|g x|)
      = (fun (x : irt * sbits) => g x).
 apply fun_ext. move => x. rewrite /g.
-rewrite - zz. smt.
+rewrite - zz. smt(@Distr).
 rewrite /g. rewrite -  (H14 P). apply J'u.
 rewrite Pr[mu_le1]. auto.
 have lim1 : lim ((fun (n : int) => big predT g (pmap J (range 0 n)))) = (sum g). 
@@ -983,14 +983,14 @@ move => N Np. exists N.
 move => n np.
 have ->: big predT g (pmap J (range 0 n))
         = Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ res.`2 \in (pmap J (range 0 n)) ].
-rewrite H14. smt.
+rewrite H14. smt(@List).
 auto.
 have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1] =
  Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ (res.`2 \in pmap J (range 0 n)) ]   +  Pr[QQ(A, B).main6(i) @ &m : P res.`1 /\ !(res.`2 \in pmap J (range 0 n)) ].
   have ->: Pr[QQ(A, B).main6(i) @ &m : P res.`1 ] = Pr[QQ(A, B).main6(i) @ &m :  (P res.`1 /\ (res.`2 \in pmap J (range 0 n)) \/ P res.`1 /\ !(res.`2 \in pmap J (range 0 n)) ) ].
-    rewrite Pr[mu_eq]. smt. auto.
+    rewrite Pr[mu_eq]. smt(). auto.
 rewrite Pr[mu_disjoint].
-smt.
+smt().
 auto. 
 have ->: Pr[QQ(A, B).main6(i) @ &m :
      P res.`1 /\ (res.`2 \in pmap J (range 0 n))] -
@@ -999,17 +999,17 @@ have ->: Pr[QQ(A, B).main6(i) @ &m :
    Pr[QQ(A, B).main6(i) @ &m :
       P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]) = 
    - Pr[QQ(A, B).main6(i) @ &m :
-      P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]. smt.
+      P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]. smt().
 have ->: `|- Pr[QQ(A, B).main6(i) @ &m :
        P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]| = Pr[QQ(A, B).main6(i) @ &m :
-       P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]. smt.
+       P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))]. smt(@Distr).
 have o : Pr[QQ(A, B).main6(i) @ &m :
-   P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))] <= Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]. rewrite Pr[mu_sub]. smt. auto. 
+   P res.`1 /\ ! (res.`2 \in pmap J (range 0 n))] <= Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]. rewrite Pr[mu_sub]. smt(). auto. 
 have : Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] < eps.
-   have ->: Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] = `|Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]|. smt.
+   have ->: Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))] = `|Pr[QQ(A, B).main6(i) @ &m : ! (res.`2 \in pmap J (range 0 n))]|. smt(@Distr).
 apply Np. apply np.
-smt.
-smt.
+smt().
+smt().
 qed.
 
 
@@ -1020,7 +1020,7 @@ local module W1 : RunnableRefl = {
    module Q = QQ(A,B)
    proc main(i : iat) = {
       var r;
-      r <- Q.main51(i);
+      r <@ Q.main51(i);
       return r;
    }
 }.
@@ -1043,8 +1043,8 @@ have refl1 :  exists (D : (glob QQ(A,B)) -> iat -> (irt * sbits) distr),
       elim (reflection_simple_res W1). move => D DP. exists D.
       move => M &m0 a. rewrite (DP &m0 M a).
       byequiv (_: ={arg, glob A, glob B} ==> _). proc. inline W1.Q.main51. wp.  
-      seq 2 1 : (={rb, glob A}). sp. call Bsens2. skip. smt.
-      call (_:true).  skip. smt. smt. smt.
+      seq 2 1 : (={rb, glob A}). sp. call Bsens2. skip. smt().
+      call (_:true).  skip. smt(). smt(). smt().
 elim refl1. move => D DP.
 have ->: (fun (x : irt * sbits) =>
      Pr[QQ(A, B).main51(i) @ &m : res = x] *
@@ -1056,7 +1056,7 @@ have ->: (fun (x : irt * sbits) =>
      q x * mass (D (glob QQ(A,B)){m} i) x).
 apply fun_ext. move => x. rewrite /q /mass.
 rewrite massE. rewrite /mu1. 
-rewrite DP. rewrite /pred1. smt.
+rewrite DP. rewrite /pred1. smt().
 have -> : (fun (x : irt * sbits) =>
      Pr[QQ(A, B).main51(i) @ &m : res = x] *
      some_real
@@ -1070,7 +1070,7 @@ have -> : (fun (x : irt * sbits) =>
      (q x)^2 * mass (D (glob QQ(A,B)){m} i) x).
 apply fun_ext. move => x. rewrite /q /mass.
 rewrite massE. rewrite /mu1. 
-rewrite DP. rewrite /pred1. smt.
+rewrite DP. rewrite /pred1. smt(@Real).
 have : forall x, 0%r <= q x <= 1%r.
  move => x.
   case (exists x0, exists &l, f (glob A){l} = x.`2 /\
@@ -1089,32 +1089,39 @@ have : forall x, 0%r <= q x <= 1%r.
 simplify. 
 elim c1. move => x0 &l pp. exists x0.  exists &l. apply pp.
 elim. move => &l [l1 l2].
-rewrite /q. rewrite - l2. smt. 
+rewrite /q. rewrite - l2. rewrite Pr[mu_le1]. rewrite Pr[mu_ge0]. auto.
    move => c2. rewrite /q /some_real.   
-rewrite choiceb_dfl. smt.
-smt.
+rewrite choiceb_dfl. smt().
+smt().
 move => qpos.   
 have str  : forall q J,  (forall i, 0%r <= q i <= 1%r) =>  big predT (fun (i0 : a) => `|q i0 * mass (D (glob QQ(A, B)){m} i) i0|) J
  <= big predT (fun (i0 : a) =>  mass (D (glob QQ(A, B)){m} i) i0) J.
 move => g.
-apply list_ind. simplify. smt.
+apply list_ind. simplify. smt().
 simplify. move => x l ih gpos.
 rewrite bigLemma. rewrite bigLemma.
 simplify.               
   have : `|g x * mass (D ((glob B){m}, (glob A){m}) i) x| <= mass (D ((glob B){m}, (glob A){m}) i) x.
     have ->: `|g x * mass (D ((glob B){m}, (glob A){m}) i) x| = g x * mass (D ((glob B){m}, (glob A){m}) i) x .
-    smt.
+    smt(@Distr).
     have qx : 0%r <= g x <= 1%r. apply gpos.
-    have mp : 0%r <= mass (D ((glob B){m}, (glob A){m}) i) x. smt.
-  smt.
-smt.
+    have mp : 0%r <= mass (D ((glob B){m}, (glob A){m}) i) x. smt(@Distr).
+  smt().
+smt().
 have bmu : forall J, uniq J => big predT (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) J = mu (D (glob QQ(A, B)){m} i) (mem J).
 move => J Jp.
 rewrite  mu_mem.
 rewrite undup_id. apply Jp.
   have ->: (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) = (fun (x : irt * sbits) => mu1 (D (glob QQ(A, B)){m} i) x).
   apply fun_ext. move => io. rewrite massE. auto. auto.
-apply (Jensen_inf (D (glob QQ(A, B)){m} i) q (fun (x : real) => x^2) 0%r 1%r 0%r 1%r ). 
+
+have ->: (fun (x : irt * sbits) => q x * mass (D (glob QQ(A, B)){m} i) x)
+ = (fun (x : irt * sbits) => q x * mu1 (D (glob QQ(A, B)){m} i) x).
+apply fun_ext. move => x. smt(@Distr).
+have ->: (fun (x : irt * sbits) => q x ^ 2 * mass (D (glob QQ(A, B)){m} i) x)
+ = (fun (x : irt * sbits) => q x ^ 2 * mu1 (D (glob QQ(A, B)){m} i) x).
+apply fun_ext. move => x. smt(@Distr @Real).
+apply (Jensen_inf (D (glob QQ(A, B)){m} i) q (fun (x : real) => x^2) 0%r 1%r 0%r 1%r _ _ _ _ _ _). 
 have ll: is_lossless (D (glob QQ(A, B)){m} i).  rewrite /is_lossless.
    have <-: Pr[QQ(A, B).main51(i) @ &m : predT res] = 1%r.
    byphoare (_: _ ==> _). proc. simplify.  seq 1 : (true). 
@@ -1127,11 +1134,14 @@ rewrite /hasE /summable.
 exists 1%r.
 move => J Jp.
 have : big predT (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) J  <= 1%r.
-rewrite bmu. apply Jp. smt.
+rewrite bmu. apply Jp. smt(@Distr).
 have : big predT (fun (i0 : a) => `|q i0 * mass (D (glob QQ(A, B)){m} i) i0|) J <= 
   big predT (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) J .
 apply str. apply qpos.
-smt.
+have ->: (fun (i0 : irt * sbits) => `|q i0 * mu1 (D (glob QQ(A, B)){m} i) i0|)
+ = (fun (i0 : irt * sbits) => `|q i0 * mass (D (glob QQ(A, B)){m} i) i0|).
+  apply fun_ext. move => x. smt(massE).
+smt().
 rewrite /hasE /summable.
 exists 1%r.
 move => J Jpos.
@@ -1143,16 +1153,21 @@ have : big predT
 apply str.
 move => io. split.
 simplify.
-rewrite /(\o). smt.
+rewrite /(\o). smt(@Real).
 simplify.
 rewrite /(\o).
-smt.
+smt(@Real).
 have : big predT (fun (i0 : a) => mass (D (glob QQ(A, B)){m} i) i0) J  <= 1%r.
-rewrite bmu. apply Jpos. smt.
-smt.
+rewrite bmu. apply Jpos. smt(@Distr).
+have ->: (fun (i0 : irt * sbits) =>
+     `|(\o) (fun (x : real) => x ^ 2) q i0 * mu1 (D (glob QQ(A, B)){m} i) i0|)
+ = (fun (i0 : irt * sbits) =>
+     `|(\o) (fun (x : real) => x ^ 2) q i0 * mass (D (glob QQ(A, B)){m} i) i0|).
+  apply fun_ext. move => x. smt(@Distr).
+smt().
 apply square_convex.
-smt.
-smt.
+smt(@Real).
+smt().
 qed.
 
 
@@ -1166,7 +1181,7 @@ elim (rewindable_A_plus A RewProp) . progress.
 byequiv (_: (={i,glob A, glob B}) ==> _). proc.
 seq 1 1 : (={r0, glob A}). call Bsens2. skip. auto.
 call (_:true).
-conseq (_: exists ga, ga = (glob A){1} /\ ={r0, glob A} ==> _). smt.
+conseq (_: exists ga, ga = (glob A){1} /\ ={r0, glob A} ==> _). smt().
 elim*. move => ga.
 call {1} (H0 ga). skip. progress. auto.  auto.
 rewrite - p.

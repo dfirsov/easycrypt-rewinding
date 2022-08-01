@@ -35,24 +35,24 @@ module type CoinTossAlice = {
   proc commit(param : value) : commitment
   proc toss(r2 : bool)  : bool * openingkey
   proc getState() : sbits
-  proc * setState(b : sbits) : unit   
+  proc setState(b : sbits) : unit   
 }.
 
 
 module B_t(A : CoinTossAlice) : RewindableSumBinder = {
   proc commit(p : value) = {
     var r;
-    r <- A.commit(p);
+    r <@ A.commit(p);
     return r;
   }
   proc open(x : bool) = {
     var d, r1 ;
-    (r1 , d) <- A.toss(!x);
+    (r1 , d) <@ A.toss(!x);
     return d;
   }
   proc getState() : sbits = {
     var s;
-    s <- A.getState();
+    s <@ A.getState();
     return s;
   }  
   proc setState(b : sbits) : unit = {
@@ -64,17 +64,17 @@ module B_t(A : CoinTossAlice) : RewindableSumBinder = {
 module B_f(A : CoinTossAlice) : RewindableSumBinder = {
   proc commit(p : value) = {
     var r;
-    r <- A.commit(p);
+    r <@ A.commit(p);
     return r;
   }
   proc open(x : bool) = {
     var d, r1 ;
-    (r1 , d) <- A.toss(x);
+    (r1 , d) <@ A.toss(x);
     return d;
   }
   proc getState() : sbits = {
     var s;
-    s <- A.getState();
+    s <@ A.getState();
     return s;
   }  
   proc setState(b : sbits) : unit = {
@@ -86,10 +86,10 @@ module B_f(A : CoinTossAlice) : RewindableSumBinder = {
 module CTA(S : CommitmentScheme, A : CoinTossAlice) = {
   proc main() = {
      var p, r2, c, r1, d;
-     p <- S.gen();
+     p <@ S.gen();
      r2 <$ {0,1};
-     c <- A.commit(p);
-     (r1, d) <- A.toss(r2);
+     c <@ A.commit(p);
+     (r1, d) <@ A.toss(r2);
      return (p,r1,c,d,r2);
   }
 }.
@@ -98,9 +98,9 @@ module CTA(S : CommitmentScheme, A : CoinTossAlice) = {
 module CTAP(S : CommitmentScheme, A : CoinTossAlice) = {
   proc main(b:bool,u:unit) = {
      var p, c, r1, d;
-     p <- S.gen();
-     c <- A.commit(p);
-     (r1, d) <- A.toss(b);
+     p <@ S.gen();
+     c <@ A.commit(p);
+     (r1, d) <@ A.toss(b);
      return (p,r1,c,d,b);
   }
 }.
@@ -108,14 +108,14 @@ module CTAP(S : CommitmentScheme, A : CoinTossAlice) = {
 
 section.
 
-declare module S : CommitmentScheme.
-declare module A : CoinTossAlice{S}.
+declare module S <: CommitmentScheme.
+declare module A <: CoinTossAlice{-S}.
 
-axiom Aol : islossless A.toss.
-axiom Acl : islossless A.commit.
-axiom Sgl : islossless S.gen.
+declare axiom Aol : islossless A.toss.
+declare axiom Acl : islossless A.commit.
+declare axiom Sgl : islossless S.gen.
 
-axiom RewPropA :
+declare axiom RewPropA :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -124,7 +124,7 @@ axiom RewPropA :
     Pr[A.setState(b) @ &m : glob A = x] = 1%r) /\
   islossless A.setState.
 
-axiom verify_det : forall a,
+declare axiom verify_det : forall a,
   phoare [ S.verify : arg = a ==> res = Ver a ] = 1%r.
 
 
@@ -171,7 +171,7 @@ local lemma ccc &m M :
 proof. byequiv.       proc. inline*. sp.
 swap {1} 2 -1. wp.
 call (_:true). call (_:true). call(_:true).
-wp.  rnd. skip. smt. auto. auto.
+wp.  rnd. skip. smt(). auto. auto.
 qed.
 
 
@@ -187,10 +187,10 @@ qed.
 local lemma sumb g : sum g = g false + g true.
 proof.
 rewrite (sumE_fin g (false :: true :: [])).
-smt. smt.
+smt(). smt().
 rewrite /big /filter.
 have ->: (filter predT [false; true]) = [false; true].
-smt. smt.
+smt(). smt().
 qed.
 
 
@@ -209,24 +209,24 @@ have ->: Pr[ CTA(S,A).main() @ &m : Ver (res.`1, res.`2, res.`3, res.`4)
 rewrite (sumsum &m (fun (r : value * bool * commitment * openingkey * bool) 
                           => Ver (r.`1, r.`2, r.`3, r.`4) /\ r.`2 ^^ r.`5 = true)).
 rewrite sumb.  simplify.
-         have ->: mu1 {0,1} false = 1%r/2%r. smt.
-         have ->: mu1 {0,1} true = 1%r/2%r. smt.         
+         have ->: mu1 {0,1} false = 1%r/2%r. smt(@DBool).
+         have ->: mu1 {0,1} true = 1%r/2%r. smt(@DBool).         
 have zz : forall q, Pr[CTAP(S, A).main(q, tt) 
                       @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                           /\ res.`2 ^^ res.`5 = true]
  = Pr[CTAP(S, A).main(q, tt) @ &m :
    Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 ^^ q = true].
 move => q. byequiv. proc. call (_:true). call (_:true). call(_:true). skip. 
-smt. auto. auto.  rewrite (zz false). rewrite (zz true). smt.
+smt(). auto. auto.  rewrite (zz false). rewrite (zz true). smt().
 have ->: Pr[ CTAP(S,A).main(false,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                           /\ (res.`2 ^^ false) = true]
        = Pr[ CTAP(S,A).main(false,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 = true]. 
-       rewrite Pr[mu_eq]. smt. auto.
+       rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[ CTAP(S,A).main(true,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                          /\ (res.`2 ^^  true) = true]
        = Pr[ CTAP(S,A).main(true,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                          /\ res.`2 = false]. 
-       rewrite Pr[mu_eq]. smt. auto.
+       rewrite Pr[mu_eq]. smt(). auto.
 have ineq1 : Pr[ CTAP(S,A).main(false,tt) 
                @ &m : Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 = true]
     <= Pr[SumBindingExperiment(S, B_t(A)).main(true) @ &m : res].
@@ -237,7 +237,7 @@ wp. call (_:true). wp.  call (_:true). wp. call (_:true).
 skip. progress.
 conseq (_: exists a, a = (param,m,c,d){2} /\ p{1} = param{2} 
                        /\ ={c, r1, d} /\ m{2} = true ==> _).
-smt.
+smt().
 elim*. progress.
 call {2} (verify_det a). skip. progress.
 auto. auto.
@@ -250,7 +250,7 @@ wp. call (_:true). wp.  call (_:true). wp. call (_:true).
 skip. progress.
 conseq (_: exists a, a = (param,m,c,d){2} /\ p{1} = param{2} 
            /\ ={c, r1, d} /\ m{2} = false ==> _).
-smt.
+smt().
 elim*. progress.
 call {2} (verify_det a). skip. progress.
 auto. auto.       
@@ -262,13 +262,13 @@ apply RewPropB_t.
 apply verify_det.
 proc. call Aol. skip. auto.
 proc. call Acl. skip. auto.
-apply Sgl.      
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-smt. 
+apply Sgl.
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+smt(). 
 qed.
 
 
@@ -287,25 +287,25 @@ have ->: Pr[ CTA(S,A).main() @ &m : Ver (res.`1, res.`2, res.`3, res.`4)
 rewrite (sumsum &m (fun (r : value * bool * commitment * openingkey * bool) 
                         => Ver (r.`1, r.`2, r.`3, r.`4) /\ r.`2 ^^ r.`5 = false)).
 rewrite sumb. simplify.
-         have ->: mu1 {0,1} false = 1%r/2%r. smt.
-         have ->: mu1 {0,1} true  = 1%r/2%r. smt.         
+         have ->: mu1 {0,1} false = 1%r/2%r. smt(@DBool).
+         have ->: mu1 {0,1} true  = 1%r/2%r. smt(@DBool).         
 have zz : forall q, Pr[CTAP(S, A).main(q, tt) @ &m :
    Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 ^^ res.`5 = false]
  = Pr[CTAP(S, A).main(q, tt) @ &m :
    Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 ^^ q = false].
-move => q. byequiv. proc. call (_:true). call (_:true). call(_:true). skip. smt. 
+move => q. byequiv. proc. call (_:true). call (_:true). call(_:true). skip. smt(). 
 auto. auto. 
-rewrite (zz false). rewrite (zz true). smt.
+rewrite (zz false). rewrite (zz true). smt().
 have ->: Pr[ CTAP(S,A).main(false,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                           /\ (res.`2 ^^ false) = false]
        = Pr[ CTAP(S,A).main(false,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                           /\ res.`2 = false]. 
-       rewrite Pr[mu_eq]. smt. auto.
+       rewrite Pr[mu_eq]. smt(). auto.
 have ->: Pr[ CTAP(S,A).main(true,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                           /\ (res.`2 ^^  true) = false]
        = Pr[ CTAP(S,A).main(true,tt) @ &m : Ver (res.`1, res.`2, res.`3, res.`4) 
                                           /\ res.`2 = true]. 
-         rewrite Pr[mu_eq]. smt. auto.
+         rewrite Pr[mu_eq]. smt(). auto.
 have ineq1 : Pr[ CTAP(S,A).main(false,tt) 
                @ &m : Ver (res.`1, res.`2, res.`3, res.`4) /\ res.`2 = false]
     <= Pr[SumBindingExperiment(S, B_f(A)).main(false) @ &m : res].
@@ -314,7 +314,7 @@ seq 3 7 : (p{1} = param{2} /\ c{1} = c{2} /\ r1{1} = r1{2}
         /\ d{1} = d{2} /\ x{2} = false /\ m{2} = false).
 wp. call (_:true). wp.  call (_:true). wp. call (_:true). skip. progress.
 conseq (_: exists a, a = (param,m,c,d){2} /\ p{1} = param{2} /\ ={c, r1, d} 
-           /\ m{2} = false ==> _). smt.
+           /\ m{2} = false ==> _). smt().
 elim*. progress.
 call {2} (verify_det a). skip. progress.
 auto. auto.      
@@ -327,7 +327,7 @@ seq 3 7 : (p{1} = param{2} /\ c{1} = c{2} /\ r1{1} = r1{2}
 wp. call (_:true). wp.  call (_:true). wp. call (_:true).
 skip. progress.
 conseq (_: exists a, a = (param,m,c,d){2} /\ p{1} = param{2} 
-      /\ ={c, r1, d} /\ m{2} = true ==> _). smt.
+      /\ ={c, r1, d} /\ m{2} = true ==> _). smt().
 elim*. progress.
 call {2} (verify_det a). skip. progress.
 auto. auto.      
@@ -340,12 +340,12 @@ apply verify_det.
 proc. call Aol. skip. auto.
 proc. call Acl. skip. auto.
 apply Sgl.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.      
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-apply ips. apply unpair_pair. apply ips. apply unpair_pair.
-smt. 
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair.       *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+(* apply ips. apply unpair_pair. apply ips. apply unpair_pair. *)
+smt(). 
 qed.
 
 

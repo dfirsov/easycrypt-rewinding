@@ -7,10 +7,10 @@ Setup
 -----
 
 * For this project we used the developement version of EasyCrypt (1.0)
-theorem prover with git-hash: 512f0f2bd8dc8c1132f3cd138a17d57d4db9c514
+theorem prover with git-hash: r2022.04-48-gc8d3d6c1
 
 * EasyCrypt was configured with support from the following SMT solvers:
-Why3@1.4.0, Z3@4.8.7, CVC4@1.6, Alt-Ergo@2.4.0
+Why3@1.5.0, Z3@4.8.7, CVC4@1.6, Alt-Ergo@2.4.1.
 
 * to check the development run:
   

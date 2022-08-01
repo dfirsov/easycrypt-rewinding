@@ -18,10 +18,10 @@ axiom unct_ct x : unct (ct_sbits x) = x.
 
 section.
 
-declare module A : Rew.
-declare module B : Rew{A}.
+declare module A <: Rew.
+declare module B <: Rew{-A}.
 
-axiom RewProp_A :
+declare axiom RewProp_A :
   exists (f : glob A -> sbits),
   injective f /\
   (forall &m, Pr[ A.getState() @ &m : (glob A) = ((glob A){m})
@@ -30,7 +30,7 @@ axiom RewProp_A :
     Pr[A.setState(b) @ &m : glob A = x] = 1%r) /\
   islossless A.setState.
 
-axiom RewProp_B :
+declare axiom RewProp_B :
   exists (f : glob B -> sbits),
   injective f /\
   (forall &m, Pr[ B.getState() @ &m : (glob B) = ((glob B){m})
@@ -47,8 +47,8 @@ local module T(A : Rew, B : Rew) : Rew = {
     
   proc getState(): sbits = {
     var stateA, stateB : sbits;
-    stateA <- A.getState();
-    stateB <- B.getState();
+    stateA <@ A.getState();
+    stateB <@ B.getState();
     return pair_sbits (ct_sbits(x),pair_sbits(stateA, stateB));      
   }
   proc setState(state: sbits): unit = {
@@ -72,7 +72,7 @@ move => fA [s1 [s2 [s3] ]] s4.
 elim (rewindable_A B RewProp_B).
 move => fB [t1 [t2 [t3]]] t4.
 exists (fun (gc : glob T(A,B)) =>  pair_sbits (ct_sbits (gc.`1), pair_sbits(fA gc.`3 , fB gc.`2) ) ).
-progress. move => y z. smt.
+progress. move => y z. smt(ips unct_ct).
 proc.
 have : phoare[ A.getState : (glob A) = (glT.`3) ==> (glob A) = (glT.`3) /\ res = fA (glT.`3)] = 1%r.
 apply s2. move => h.
@@ -86,8 +86,9 @@ call (t3 glT.`2).
 call (s3 glT.`3).
 skip. 
 progress.
-smt. smt. smt.
+smt(unpair_pair) . smt(unpair_pair). smt(unpair_pair unct_ct).
 qed.
+
 
 
 local lemma trans_rew :
